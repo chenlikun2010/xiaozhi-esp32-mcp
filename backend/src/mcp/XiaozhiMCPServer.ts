@@ -3,6 +3,8 @@ import { WebSocketClientTransport } from "./WebSocketClientTransport";
 import { z } from "zod";
 import { QwenSearchToolDefinition, handleQwenSearch } from "./tools/QwenSearchTool";
 import { HowToCookToolDefinition, handleHowToCook } from "./tools/HowToCookTool";
+import { StartMbtiTestDefinition, AnswerQuestionDefinition, CalculateMbtiResultDefinition, handleStartMbtiTest, handleAnswerQuestion, handleCalculateResult } from "./tools/MbtiTool";
+import { GetStockQuoteDefinition, GetStockHistoryDefinition, handleGetStockQuote, handleGetStockHistory } from "./tools/StockTool";
 
 export class XiaozhiMCPServer {
     private server: McpServer;
@@ -60,6 +62,48 @@ export class XiaozhiMCPServer {
             HowToCookToolDefinition.schema,
             async (args) => {
                 return await handleHowToCook(args);
+            }
+        );
+
+        // MBTI Tools (Refactored)
+        this.server.tool(
+            StartMbtiTestDefinition.name,
+            StartMbtiTestDefinition.schema,
+            async (args) => {
+                return await handleStartMbtiTest(args);
+            }
+        );
+
+        this.server.tool(
+            AnswerQuestionDefinition.name,
+            AnswerQuestionDefinition.schema,
+            async (args) => {
+                return await handleAnswerQuestion(args);
+            }
+        );
+
+        this.server.tool(
+            CalculateMbtiResultDefinition.name,
+            CalculateMbtiResultDefinition.schema,
+            async (args) => {
+                return await handleCalculateResult(args);
+            }
+        );
+
+        // Stock Tools
+        this.server.tool(
+            GetStockQuoteDefinition.name,
+            GetStockQuoteDefinition.schema,
+            async (args) => {
+                return await handleGetStockQuote(args);
+            }
+        );
+
+        this.server.tool(
+            GetStockHistoryDefinition.name,
+            GetStockHistoryDefinition.schema,
+            async (args) => {
+                return await handleGetStockHistory(args);
             }
         );
     }

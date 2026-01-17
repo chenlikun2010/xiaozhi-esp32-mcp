@@ -38,6 +38,7 @@ app.get('/', (req, res) => {
 });
 
 import { UserMCPInstance } from './entities/UserMCPInstance';
+import { MCPService } from './entities/MCPService';
 import InstanceManager from './mcp/InstanceManager';
 
 const startServer = async () => {
@@ -52,9 +53,13 @@ const startServer = async () => {
 
         for (const inst of runningInstances) {
             console.log(`Auto-starting instance ${inst.id} (User: ${inst.userId})...`);
-            // Assuming a default service name or derived one. The original start logic used "User_${user.userId}_Service"
-            const serviceName = `User_${inst.userId}_Service`;
-            const success = await InstanceManager.startInstance(inst.id, inst.xiaozhiWssUrl, serviceName);
+            // Fetch correct service named
+            const service = await AppDataSource.getRepository(MCPService).findOne({ where: { id: inst.serviceId } });
+            const serviceName = service ? service.name : `User_${inst.userId}_Service`;
+
+            // Format: Name #ID
+            const finalName = `${serviceName} #${inst.id}`;
+            const success = await InstanceManager.startInstance(inst.id, inst.xiaozhiWssUrl, finalName);
             if (success) {
                 console.log(`Instance ${inst.id} started successfully.`);
             } else {

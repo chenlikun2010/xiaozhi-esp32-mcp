@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { AppDataSource } from '../db';
 import { UserMCPInstance } from '../entities/UserMCPInstance';
+import { MCPService } from '../entities/MCPService';
 import InstanceManager from '../mcp/InstanceManager';
 
 export class InstanceController {
@@ -10,7 +11,10 @@ export class InstanceController {
             if (!user) return res.status(401).json({ message: "Unauthorized" });
 
             const repo = AppDataSource.getRepository(UserMCPInstance);
-            const instances = await repo.find({ where: { userId: user.userId } });
+            const instances = await repo.find({
+                where: { userId: user.userId },
+                relations: ["service"]
+            });
 
             // Enrich with realtime status
             const result = instances.map(inst => ({
@@ -62,8 +66,13 @@ export class InstanceController {
 
             if (!instance) return res.status(404).json({ message: "Instance not found" });
 
-            // In real app, name might come from service definition
-            const success = await InstanceManager.startInstance(instance.id, instance.xiaozhiWssUrl, `User_${user.userId}_Service`);
+            // Fetch Service Name
+            const serviceRepo = AppDataSource.getRepository(MCPService);
+            const serviceDef = await serviceRepo.findOne({ where: { id: instance.serviceId } });
+            const serviceName = serviceDef ? serviceDef.name : `User_${user.userId}_Service`;
+
+            // Start with meaningful name
+            const success = await InstanceManager.startInstance(instance.id, instance.xiaozhiWssUrl, `${serviceName} #${instance.id}`);
 
             if (success) {
                 instance.status = 'running';

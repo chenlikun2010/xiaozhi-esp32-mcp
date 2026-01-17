@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebSocketClientTransport } from "./WebSocketClientTransport";
 import { z } from "zod";
 import { QwenSearchToolDefinition, handleQwenSearch } from "./tools/QwenSearchTool";
+import { HowToCookToolDefinition, handleHowToCook } from "./tools/HowToCookTool";
 
 export class XiaozhiMCPServer {
     private server: McpServer;
@@ -21,6 +22,7 @@ export class XiaozhiMCPServer {
     }
 
     private setupDefaultTools() {
+        console.log("Setting up default tools...");
         // Example: A simple echo tool to verify connectivity
         this.server.tool(
             "echo",
@@ -49,6 +51,15 @@ export class XiaozhiMCPServer {
             QwenSearchToolDefinition.schema,
             async (args) => {
                 return await handleQwenSearch(args);
+            }
+        );
+
+        // HowToCook Tool
+        this.server.tool(
+            HowToCookToolDefinition.name,
+            HowToCookToolDefinition.schema,
+            async (args) => {
+                return await handleHowToCook(args);
             }
         );
     }

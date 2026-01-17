@@ -13,6 +13,9 @@ interface Instance {
     status: string;
     startTime?: string;
     active: boolean;
+    service?: {
+        name: string;
+    };
 }
 
 export default function Dashboard() {
@@ -113,7 +116,7 @@ export default function Dashboard() {
                                 <Power className={cn("h-6 w-6", instance.active ? "text-green-500" : "text-gray-400")} />
                             </div>
                             <div className="flex-1">
-                                <h3 className="font-semibold text-lg">MCP 服务 #{instance.serviceId}</h3>
+                                <h3 className="font-semibold text-lg">{instance.service ? `${instance.service.name} #${instance.id}` : `MCP 服务 #${instance.serviceId}`}</h3>
                                 <p className="text-sm text-gray-500 font-mono truncate max-w-[400px]">{instance.xiaozhiWssUrl}</p>
                             </div>
                             <div className="flex items-center gap-2">

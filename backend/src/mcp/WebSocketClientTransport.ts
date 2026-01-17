@@ -41,6 +41,7 @@ export class WebSocketClientTransport implements Transport {
             this._ws.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data.toString());
+                    console.log(`[MCP Inbound]`, JSON.stringify(data));
                     this.onmessage?.(data);
                 } catch (error) {
                     console.error("Failed to parse message", error);
@@ -57,6 +58,7 @@ export class WebSocketClientTransport implements Transport {
         if (this._ws?.readyState !== WebSocket.OPEN) {
             throw new Error("WebSocket is not open");
         }
+        console.log(`[MCP Outbound]`, JSON.stringify(message));
         this._ws.send(JSON.stringify(message));
     }
 }

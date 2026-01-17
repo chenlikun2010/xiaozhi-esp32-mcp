@@ -49,13 +49,13 @@ export async function handleQwenSearch(args: { query: string }) {
         const data = response.data as any;
         if (data.output && data.output.choices && data.output.choices.length > 0) {
             const content = data.output.choices[0].message.content;
-            console.log(`[Qwen Search] Success (${duration}ms): Found ${content.length} chars.`);
-            console.log(`[Qwen Search] Preview: ${content.substring(0, 100)}...`);
+            console.log(`[Chat Log] Query: "${args.query}"`);
+            console.log(`[Chat Log] Result: ${content.substring(0, 200)}...`); // Summary log
             return {
                 content: [{ type: "text" as const, text: content }]
             };
         } else {
-            console.log(`[Qwen Search] No results (${duration}ms).`);
+            console.log(`[Chat Log] Query: "${args.query}" - No results found.`);
             return {
                 content: [{ type: "text" as const, text: "No results found or invalid response from Qwen API." }]
             };

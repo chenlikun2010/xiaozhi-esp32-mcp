@@ -13,8 +13,58 @@ async function runTest() {
         wss = new WebSocketServer({ port: MOCK_WSS_PORT });
         wss.on('connection', (ws) => {
             console.log("Mock WSS: Client connected!");
+
+            // Simulate MCP Client Handshake
+            const send = (msg: any) => ws.send(JSON.stringify(msg));
+
+            // 1. Send Initialize
+            setTimeout(() => {
+                console.log("Mock WSS: Sending initialize...");
+                send({
+                    jsonrpc: "2.0",
+                    id: 1,
+                    method: "initialize",
+                    params: {
+                        protocolVersion: "2024-11-05",
+                        capabilities: {},
+                        clientInfo: { name: "test-client", version: "1.0" }
+                    }
+                });
+            }, 500);
+
             ws.on('message', (message) => {
-                console.log("Mock WSS received:", message.toString());
+                const msgStr = message.toString();
+                console.log("Mock WSS received:", msgStr);
+
+                try {
+                    const msg = JSON.parse(msgStr);
+                    // 2. If we get initialize response, send initialized and ask for tools
+                    if (msg.id === 1 && msg.result) {
+                        console.log("Mock WSS: Received initialize response. Capabilities:", JSON.stringify(msg.result.capabilities));
+
+                        // Send initialized notification
+                        send({
+                            jsonrpc: "2.0",
+                            method: "notifications/initialized"
+                        });
+
+                        // Ask for tools
+                        console.log("Mock WSS: Sending tools/list...");
+                        send({
+                            jsonrpc: "2.0",
+                            id: 2,
+                            method: "tools/list"
+                        });
+                    }
+
+                    // 3. Check tool list response
+                    if (msg.id === 2 && msg.result) {
+                        console.log("Mock WSS: Received Tool List:", JSON.stringify(msg.result));
+                    }
+
+                } catch (e) {
+                    console.error("Mock WSS: Error parsing message", e);
+                }
             });
         });
 

@@ -13,118 +13,123 @@ export class XiaozhiMCPServer {
     private transport: WebSocketClientTransport;
     private isConnected: boolean = false;
 
+    private serviceName: string;
+
     constructor(wssUrl: string, serviceName: string = "Xiaozhi MCP Service") {
         this.server = new McpServer({
             name: serviceName,
             version: "1.0.0"
         });
+        this.serviceName = serviceName;
 
         this.transport = new WebSocketClientTransport(wssUrl);
 
-        // Define some default tools/capabilities
-        this.setupDefaultTools();
+        // Register tools based on service name
+        this.setupTools();
     }
 
-    private setupDefaultTools() {
-        console.log("Setting up default tools...");
-        // Example: A simple echo tool to verify connectivity
+    private setupTools() {
+        console.log(`Setting up tools for service: ${this.serviceName}`);
+
+        // Base tools
+        this.registerBaseTools();
+
+        // Conditional Registration
+        if (this.serviceName.includes("联网搜索")) {
+            this.registerQwenSearchTool();
+        } else if (this.serviceName.includes("做饭")) {
+            this.registerCookTool();
+        } else if (this.serviceName.includes("MBTI") || this.serviceName.includes("性格测试")) {
+            this.registerMbtiTools();
+        } else if (this.serviceName.includes("股票")) {
+            this.registerStockTools();
+        } else if (this.serviceName.includes("汇率")) {
+            this.registerExchangeTools();
+        } else if (this.serviceName.includes("12306") || this.serviceName.includes("火车票")) {
+            this.registerTrainTools();
+        } else {
+            console.warn(`Unknown service name: ${this.serviceName}. Only base tools registered.`);
+        }
+    }
+
+    private registerBaseTools() {
         this.server.tool(
             "echo",
             { message: z.string() },
-            async ({ message }) => {
-                return {
-                    content: [{ type: "text", text: `Echo: ${message}` }]
-                };
-            }
+            async ({ message }) => ({ content: [{ type: "text", text: `Echo: ${message}` }] })
         );
-
-        // Example: Get Server Time
         this.server.tool(
             "get_server_time",
             {},
-            async () => {
-                return {
-                    content: [{ type: "text", text: new Date().toISOString() }]
-                };
-            }
+            async () => ({ content: [{ type: "text", text: new Date().toISOString() }] })
         );
+    }
 
-        // Qwen Internet Search Tool
+    private registerQwenSearchTool() {
         this.server.tool(
             QwenSearchToolDefinition.name,
             QwenSearchToolDefinition.schema,
-            async (args) => {
-                return await handleQwenSearch(args);
-            }
+            async (args) => await handleQwenSearch(args)
         );
+    }
 
-        // HowToCook Tool
+    private registerCookTool() {
         this.server.tool(
             HowToCookToolDefinition.name,
             HowToCookToolDefinition.schema,
-            async (args) => {
-                return await handleHowToCook(args);
-            }
+            async (args) => await handleHowToCook(args)
         );
+    }
 
-        // MBTI Tools (Refactored)
+    private registerMbtiTools() {
         this.server.tool(
             StartMbtiTestDefinition.name,
             StartMbtiTestDefinition.schema,
-            async (args) => {
-                return await handleStartMbtiTest(args);
-            }
+            async (args) => await handleStartMbtiTest(args)
         );
-
         this.server.tool(
             AnswerQuestionDefinition.name,
             AnswerQuestionDefinition.schema,
-            async (args) => {
-                return await handleAnswerQuestion(args);
-            }
+            async (args) => await handleAnswerQuestion(args)
         );
-
         this.server.tool(
             CalculateMbtiResultDefinition.name,
             CalculateMbtiResultDefinition.schema,
-            async (args) => {
-                return await handleCalculateResult(args);
-            }
+            async (args) => await handleCalculateResult(args)
         );
+    }
 
-        // Stock Tools
+    private registerStockTools() {
         this.server.tool(
             GetStockQuoteDefinition.name,
             GetStockQuoteDefinition.schema,
-            async (args) => {
-                return await handleGetStockQuote(args);
-            }
+            async (args) => await handleGetStockQuote(args)
         );
+        this.server.tool(
+            GetStockHistoryDefinition.name,
+            GetStockHistoryDefinition.schema,
+            async (args) => await handleGetStockHistory(args)
+        );
+    }
 
-        // Exchange Rate Tools
+    private registerExchangeTools() {
         this.server.tool(
             GetExchangeRateDefinition.name,
             GetExchangeRateDefinition.schema,
-            async (args) => {
-                return await handleGetExchangeRate(args);
-            }
+            async (args) => await handleGetExchangeRate(args)
         );
-
         this.server.tool(
             ConvertCurrencyDefinition.name,
             ConvertCurrencyDefinition.schema,
-            async (args) => {
-                return await handleConvertCurrency(args);
-            }
+            async (args) => await handleConvertCurrency(args)
         );
+    }
 
-        // Train Ticket Tool
+    private registerTrainTools() {
         this.server.tool(
             SearchTrainTicketsDefinition.name,
             SearchTrainTicketsDefinition.schema,
-            async (args) => {
-                return await handleSearchTrainTickets(args);
-            }
+            async (args) => await handleSearchTrainTickets(args)
         );
     }
 

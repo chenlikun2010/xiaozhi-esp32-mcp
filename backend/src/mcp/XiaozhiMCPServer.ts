@@ -7,6 +7,7 @@ import { StartMbtiTestDefinition, AnswerQuestionDefinition, CalculateMbtiResultD
 import { GetStockQuoteDefinition, GetStockHistoryDefinition, handleGetStockQuote, handleGetStockHistory } from "./tools/StockTool";
 import { GetExchangeRateDefinition, ConvertCurrencyDefinition, handleGetExchangeRate, handleConvertCurrency } from "./tools/ExchangeRateTool";
 import { SearchTrainTicketsDefinition, handleSearchTrainTickets } from "./tools/TrainTicketTool";
+import { SearchFlightTicketsDefinition, handleSearchFlightTickets } from "./tools/FlightTicketTool";
 
 export class XiaozhiMCPServer {
     private server: McpServer;
@@ -29,7 +30,7 @@ export class XiaozhiMCPServer {
     }
 
     private setupTools() {
-        console.log(`Setting up tools for service: ${this.serviceName}`);
+        console.log(`[XiaozhiMCPServer] Setting up tools for service: '${this.serviceName}'`);
 
         // Base tools
         this.registerBaseTools();
@@ -47,6 +48,8 @@ export class XiaozhiMCPServer {
             this.registerExchangeTools();
         } else if (this.serviceName.includes("12306") || this.serviceName.includes("火车票")) {
             this.registerTrainTools();
+        } else if (this.serviceName.includes("机票") || this.serviceName.includes("携程")) {
+            this.registerFlightTools();
         } else {
             console.warn(`Unknown service name: ${this.serviceName}. Only base tools registered.`);
         }
@@ -130,6 +133,14 @@ export class XiaozhiMCPServer {
             SearchTrainTicketsDefinition.name,
             SearchTrainTicketsDefinition.schema,
             async (args) => await handleSearchTrainTickets(args)
+        );
+    }
+
+    private registerFlightTools() {
+        this.server.tool(
+            SearchFlightTicketsDefinition.name,
+            SearchFlightTicketsDefinition.schema,
+            async (args) => await handleSearchFlightTickets(args)
         );
     }
 

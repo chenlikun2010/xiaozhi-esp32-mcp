@@ -51,7 +51,12 @@ export class WebSocketClientTransport implements Transport {
     }
 
     async close(): Promise<void> {
-        this._ws?.close();
+        console.log(`[WebSocketClientTransport] Closing connection to ${this._url}`);
+        if (this._ws) {
+            this._ws.close();
+            this._ws.terminate(); // Force terminate to ensure no zombie connections
+            console.log(`[WebSocketClientTransport] Connection closed.`);
+        }
     }
 
     async send(message: JSONRPCMessage): Promise<void> {

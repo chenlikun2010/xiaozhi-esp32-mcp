@@ -93,12 +93,12 @@ nano .env
 
 ```env
 PORT=3005
-DB_HOST=localhost
+DB_HOST=8.140.51.220
 DB_PORT=3306
 DB_USER=mcpadmin
 DB_PASS=Mcp@20260109
 DB_NAME=mcplist
-JWT_SECRET=your_secure_jwt_secret
+JWT_SECRET=xJW+2JHzgs+Dx8gk8/VWLSJINLVC56j8my/umYTmiOk=
 QWEN_API_KEY=sk-f65deeac876c48099bcb5e5889c82e01
 ```
 
@@ -144,14 +144,14 @@ npm run build
 sudo nano /etc/nginx/sites-available/mcpmanage
 ```
 
-粘贴以下配置 (替换 `your_domain_or_ip` 为你的域名或公网 IP)：
+粘贴以下配置 (替换 `wx.aixuexi.cc` 为你的域名或公网 IP)：
 
 ```nginx
 server {
     listen 80;
-    server_name your_domain_or_ip;
+    server_name wx.aixuexi.cc;
 
-    root /home/ubuntu/app/frontend/dist; # 确保路径正确指向 frontend/dist
+    root /root/app/frontend/dist; # 确保路径正确指向 frontend/dist
     index index.html;
 
     # 前端静态文件
@@ -181,7 +181,7 @@ sudo systemctl restart nginx
 
 ## 7. 验证部署
 
-1.  访问 `http://your_domain_or_ip`。
+1.  访问 `http://wx.aixuexi.cc`。
 2.  你应该能看到登录页面。
 3.  尝试注册、登录、访问服务市场，确认一切正常。
 
@@ -191,7 +191,28 @@ sudo systemctl restart nginx
 - **重启后端**: `pm2 restart mcp-backend`
 - **更新代码**:
   ```bash
+  # 1. 拉取最新代码
+  cd ~/app
   git pull
-  cd backend && npm install && npm run build && pm2 restart mcp-backend
-  cd ../frontend && npm install && npm run build
+
+  # 2. 更新后端 (安装新依赖 yahoo-finance2 等)
+  cd backend
+  npm install
+  npm run build
+
+  # 3. 初始化新服务数据 (运行本次新增的 Seed 脚本)
+  # 注意：请确保 .env 配置文件正确
+  npx ts-node src/scripts/add_how_to_cook_service.ts
+  npx ts-node src/scripts/add_mbti_service.ts
+  npx ts-node src/scripts/add_stock_service.ts
+  npx ts-node src/scripts/add_exchange_service.ts
+
+  # 4. 重启后端服务
+  pm2 restart mcp-backend
+
+  # 5. 更新前端 (可选，如果前端有修改)
+  cd ../frontend
+  npm install
+  npm run build
+  # 此时 Nginx 会自动服务新的 dist 文件，无需重启 Nginx (除非修改了 nginx 配置)
   ```

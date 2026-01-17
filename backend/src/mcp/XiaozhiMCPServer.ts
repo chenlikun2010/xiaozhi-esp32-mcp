@@ -5,6 +5,8 @@ import { QwenSearchToolDefinition, handleQwenSearch } from "./tools/QwenSearchTo
 import { HowToCookToolDefinition, handleHowToCook } from "./tools/HowToCookTool";
 import { StartMbtiTestDefinition, AnswerQuestionDefinition, CalculateMbtiResultDefinition, handleStartMbtiTest, handleAnswerQuestion, handleCalculateResult } from "./tools/MbtiTool";
 import { GetStockQuoteDefinition, GetStockHistoryDefinition, handleGetStockQuote, handleGetStockHistory } from "./tools/StockTool";
+import { GetExchangeRateDefinition, ConvertCurrencyDefinition, handleGetExchangeRate, handleConvertCurrency } from "./tools/ExchangeRateTool";
+import { SearchTrainTicketsDefinition, handleSearchTrainTickets } from "./tools/TrainTicketTool";
 
 export class XiaozhiMCPServer {
     private server: McpServer;
@@ -99,11 +101,29 @@ export class XiaozhiMCPServer {
             }
         );
 
+        // Exchange Rate Tools
         this.server.tool(
-            GetStockHistoryDefinition.name,
-            GetStockHistoryDefinition.schema,
+            GetExchangeRateDefinition.name,
+            GetExchangeRateDefinition.schema,
             async (args) => {
-                return await handleGetStockHistory(args);
+                return await handleGetExchangeRate(args);
+            }
+        );
+
+        this.server.tool(
+            ConvertCurrencyDefinition.name,
+            ConvertCurrencyDefinition.schema,
+            async (args) => {
+                return await handleConvertCurrency(args);
+            }
+        );
+
+        // Train Ticket Tool
+        this.server.tool(
+            SearchTrainTicketsDefinition.name,
+            SearchTrainTicketsDefinition.schema,
+            async (args) => {
+                return await handleSearchTrainTickets(args);
             }
         );
     }

@@ -54,7 +54,7 @@ export class InstanceController {
 
     static async start(req: Request, res: Response) {
         try {
-            const id = parseInt(req.params.id);
+            const id = parseInt(req.params.id as string);
             const user = (req as any).user;
 
             const repo = AppDataSource.getRepository(UserMCPInstance);
@@ -83,7 +83,7 @@ export class InstanceController {
 
     static async stop(req: Request, res: Response) {
         try {
-            const id = parseInt(req.params.id);
+            const id = parseInt(req.params.id as string);
             const user = (req as any).user;
 
             const repo = AppDataSource.getRepository(UserMCPInstance);
@@ -105,7 +105,7 @@ export class InstanceController {
 
     static async delete(req: Request, res: Response) {
         try {
-            const id = parseInt(req.params.id);
+            const id = parseInt(req.params.id as string);
             const user = (req as any).user;
 
             const repo = AppDataSource.getRepository(UserMCPInstance);

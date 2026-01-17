@@ -95,11 +95,11 @@ nano .env
 PORT=3005
 DB_HOST=localhost
 DB_PORT=3306
-DB_USER=mcp_user
-DB_PASS=your_password
-DB_NAME=mcp_db
+DB_USER=mcpadmin
+DB_PASS=Mcp@20260109
+DB_NAME=mcplist
 JWT_SECRET=your_secure_jwt_secret
-QWEN_API_KEY=your_qwen_api_key_here
+QWEN_API_KEY=sk-f65deeac876c48099bcb5e5889c82e01
 ```
 
 ### 4.3 初始化数据

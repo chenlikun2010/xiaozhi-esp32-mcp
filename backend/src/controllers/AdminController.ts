@@ -33,7 +33,7 @@ export class AdminController {
     // Update user (e.g. role, expireDate, password)
     static async updateUser(req: Request, res: Response) {
         try {
-            const id = parseInt(req.params.id);
+            const id = parseInt(req.params.id as string);
             const { role, expireDate, password } = req.body;
 
             const repo = AppDataSource.getRepository(User);

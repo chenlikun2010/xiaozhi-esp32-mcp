@@ -103,7 +103,7 @@ export default function Dashboard() {
             <div className="grid gap-4">
                 {instances.map(instance => (
                     <Card key={instance.id} className="flex flex-col sm:flex-row items-start sm:items-center p-4 gap-4">
-                        <div className="flex items-center gap-4 w-full sm:w-auto">
+                        <div className="flex items-center gap-4 w-full sm:w-auto shrink-0">
                             <div className="p-3 bg-gray-100 rounded-full flex-shrink-0">
                                 <Power className={cn("h-6 w-6", instance.active ? "text-green-500" : "text-gray-400")} />
                             </div>
@@ -117,7 +117,7 @@ export default function Dashboard() {
                             <p className="text-sm text-gray-500 font-mono truncate w-full block">{instance.xiaozhiWssUrl}</p>
                         </div>
 
-                        <div className="flex items-center justify-between w-full sm:w-auto gap-2 mt-2 sm:mt-0">
+                        <div className="flex items-center justify-between w-full sm:w-auto gap-2 mt-2 sm:mt-0 relative z-10 shrink-0 min-w-fit whitespace-nowrap">
                             <div className={cn("px-2 py-1 rounded text-xs uppercase font-bold",
                                 instance.status === 'running' ? 'bg-green-100 text-green-700' :
                                     instance.status === 'error' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700')}>
@@ -125,11 +125,11 @@ export default function Dashboard() {
                             </div>
                             <div className="flex gap-2">
                                 {instance.status !== 'running' ? (
-                                    <Button size="sm" onClick={() => handleStart(instance.id)}><Play className="h-4 w-4 mr-1" /> 启动</Button>
+                                    <Button size="sm" type="button" onClick={() => handleStart(instance.id)}><Play className="h-4 w-4 mr-1" /> 启动</Button>
                                 ) : (
-                                    <Button size="sm" variant="destructive" onClick={() => handleStop(instance.id)}><Square className="h-4 w-4 mr-1" /> 停止</Button>
+                                    <Button size="sm" variant="destructive" type="button" onClick={() => handleStop(instance.id)}><Square className="h-4 w-4 mr-1" /> 停止</Button>
                                 )}
-                                <Button size="icon" variant="ghost" onClick={() => handleDelete(instance.id)}><Trash2 className="h-4 w-4 text-gray-500" /></Button>
+                                <Button size="icon" variant="ghost" type="button" onClick={() => handleDelete(instance.id)}><Trash2 className="h-4 w-4 text-gray-500" /></Button>
                             </div>
                         </div>
                     </Card>

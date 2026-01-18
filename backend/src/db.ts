@@ -1,4 +1,7 @@
 import "reflect-metadata";
+import dotenv from 'dotenv';
+dotenv.config();
+
 import { DataSource } from "typeorm";
 import { User } from "./entities/User";
 import { MCPService } from "./entities/MCPService";
@@ -7,10 +10,10 @@ import { VerificationCode } from './entities/VerificationCode';
 
 export const AppDataSource = new DataSource({
     type: "mysql",
-    host: process.env.DB_HOST || "localhost",
+    host: process.env.DB_HOST || "8.140.51.220",
     port: parseInt(process.env.DB_PORT || "3306"),
-    username: process.env.DB_USER || "root",
-    password: process.env.DB_PASSWORD || "password",
+    username: process.env.DB_USER || "mcpadmin",
+    password: process.env.DB_PASSWORD || "Mcp@20260109",
     database: process.env.DB_NAME || "mcplist",
     synchronize: true, // Auto-schema sync for dev
     logging: false,

@@ -6,7 +6,7 @@ const addService = async () => {
     const repo = AppDataSource.getRepository(MCPService);
 
     const oldName = "程序员做饭指南 (HowToCook)";
-    const newName = "今天吃什么？";
+    const newName = "菜谱查询";
 
     let service = await repo.findOne({ where: { name: oldName } });
 

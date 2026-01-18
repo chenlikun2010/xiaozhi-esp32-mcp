@@ -29,7 +29,7 @@ app.post('/forgot-password', AuthController.requestPasswordReset);
 app.post('/reset-password', AuthController.resetPassword);
 app.post('/activate', authMiddleware, AuthController.activate);
 
-app.get('/services', authMiddleware, ServiceController.list);
+app.get('/api/services', ServiceController.list);
 
 // Instance Routes
 app.get('/instances', authMiddleware, InstanceController.list);

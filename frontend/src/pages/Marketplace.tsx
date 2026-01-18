@@ -57,9 +57,7 @@ export default function Marketplace() {
                         {services.map(service => (
                             <Card key={service.id} className="hover:shadow-lg transition-shadow">
                                 <CardHeader>
-                                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-2">
-                                        <span className="text-2xl">⚡</span>
-                                    </div>
+
                                     <CardTitle>{service.name}</CardTitle>
                                     <CardDescription>{service.description}</CardDescription>
                                 </CardHeader>
@@ -82,7 +80,7 @@ export default function Marketplace() {
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div>
-                                    <label className="text-sm font-medium mb-1 block">小智 WebSocket 地址</label>
+                                    <label className="text-sm font-medium mb-1 block">WebSocket 地址</label>
                                     <Input
                                         placeholder="wss://api.xiaozhi.me/mcp/?token=..."
                                         value={wssUrl}

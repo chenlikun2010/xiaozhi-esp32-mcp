@@ -3,14 +3,14 @@ import { z } from 'zod';
 
 export const HowToCookToolDefinition = {
     name: "how_to_cook",
-    description: "Find recipes and cooking guides for programmers from the HowToCook open source project.",
+    description: "Recommend what to eat today based on the HowToCook open source project. Can provide recipes and cooking guides.",
     schema: {
-        dish_name: z.string().describe("The name of the dish you want to learn how to cook, e.g. 'Red Braised Pork' or 'Scrambled Eggs with Tomato'."),
+        dish_name: z.string().describe("The name of the dish you want to learn how to cook, or a keyword like 'lunch', 'dinner', 'spicy' to get recommendations."),
     }
 };
 
 export async function handleHowToCook(args: { dish_name: string }) {
-    console.log(`[Chat Log] Tool: how_to_cook, Dish: "${args.dish_name}"`);
+    console.log(`[Chat Log] Tool: how_to_cook, Dish/Query: "${args.dish_name}"`);
     const startTime = Date.now();
 
     const apiKey = process.env.QWEN_API_KEY;
@@ -20,15 +20,17 @@ export async function handleHowToCook(args: { dish_name: string }) {
 
     // Specialized prompt to search within the specific repo context
     const prompt = `
-You are a master chef helping a programmer cook. 
+You are a helpful cooking assistant. The user is asking "What to eat today?" or looking for a specific dish: "${args.dish_name}".
 Your knowledge base is strictly the content from the GitHub repository "Anduin2017/HowToCook".
-The user wants to know how to cook: "${args.dish_name}".
 
-Please search for this dish in the HowToCook repository content/context.
-Return a structured recipe including:
-1. Preparation (ingredients, tools)
-2. Steps (clear, numbered instructions)
-3. Tips (crucial advice for success)
+If the user asks for a recommendation (e.g. "what to eat", "lunch"), recommend a dish suitable for programmers from the repo.
+If the user asks for a specific dish, search for it.
+
+Return a structured response:
+1. Dish Name
+2. Brief Description (Why it's a good choice)
+3. Preparation (ingredients)
+4. Steps (summarized)
 
 If you cannot find the specific dish in the HowToCook context, provide a general best-practice recipe but mention it might not be from the repo.
     `.trim();

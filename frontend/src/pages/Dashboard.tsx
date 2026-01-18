@@ -99,43 +99,84 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* Instance List */}
-            <div className="grid gap-4">
+            {/* Instance Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {instances.map(instance => (
-                    <Card key={instance.id} className="flex flex-col sm:flex-row items-start sm:items-center p-4 gap-4">
-                        <div className="flex items-center gap-4 w-full sm:w-auto shrink-0">
-                            <div className="p-3 bg-gray-100 rounded-full flex-shrink-0">
-                                <Power className={cn("h-6 w-6", instance.active ? "text-green-500" : "text-gray-400")} />
+                    <Card key={instance.id} className="flex flex-col overflow-hidden border-2 hover:border-primary/50 transition-colors">
+                        <div className="p-6 flex-1">
+                            <div className="flex justify-between items-start mb-4">
+                                <div className="p-3 bg-primary/10 rounded-xl">
+                                    <Power className={cn("h-8 w-8", instance.active ? "text-green-600" : "text-gray-400")} />
+                                </div>
+                                <div className={cn("px-3 py-1 rounded-full text-sm font-bold border",
+                                    instance.status === 'running' ? 'bg-green-50 text-green-700 border-green-200' :
+                                        instance.status === 'error' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-gray-50 text-gray-600 border-gray-200')}>
+                                    {instance.status === 'running' ? '运行中' :
+                                        instance.status === 'error' ? '异常' : '已停止'}
+                                </div>
                             </div>
-                            <div className="flex-1 sm:hidden">
-                                <h3 className="font-semibold text-lg">{instance.service ? `${instance.service.name} #${instance.id}` : `MCP 服务 #${instance.serviceId}`}</h3>
+
+                            <h3 className="font-bold text-xl mb-1 line-clamp-1" title={instance.service ? instance.service.name : `MCP 服务 #${instance.serviceId}`}>
+                                {instance.service ? instance.service.name : `MCP 服务 #${instance.serviceId}`}
+                            </h3>
+                            <p className="text-sm text-gray-500 mb-4">ID: {instance.id}</p>
+
+                            <div className="bg-gray-50 p-3 rounded-lg border border-gray-100 mb-4">
+                                <p className="text-xs text-gray-500 font-mono mb-1">WebSocket 地址</p>
+                                <div className="flex items-center gap-2">
+                                    <code className="text-xs flex-1 truncate select-all">{instance.xiaozhiWssUrl}</code>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => {
+                                        navigator.clipboard.writeText(instance.xiaozhiWssUrl);
+                                        // Optional: Add toast notification here
+                                    }}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>
+                                    </Button>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="flex-1 w-full min-w-0">
-                            <h3 className="font-semibold text-lg hidden sm:block">{instance.service ? `${instance.service.name} #${instance.id}` : `MCP 服务 #${instance.serviceId}`}</h3>
-                            <p className="text-sm text-gray-500 font-mono truncate w-full block">{instance.xiaozhiWssUrl}</p>
-                        </div>
+                        <div className="p-4 bg-gray-50/50 border-t grid grid-cols-2 gap-3">
+                            {instance.status !== 'running' ? (
+                                <Button
+                                    size="lg"
+                                    className="w-full bg-green-600 hover:bg-green-700 text-white font-bold h-12 text-lg shadow-sm flex items-center justify-center gap-2"
+                                    onClick={() => handleStart(instance.id)}
+                                >
+                                    <Play className="h-5 w-5" /> 启动
+                                </Button>
+                            ) : (
+                                <Button
+                                    size="lg"
+                                    variant="destructive"
+                                    className="w-full font-bold h-12 text-lg shadow-sm flex items-center justify-center gap-2"
+                                    onClick={() => handleStop(instance.id)}
+                                >
+                                    <Square className="h-5 w-5" /> 停止
+                                </Button>
+                            )}
 
-                        <div className="flex items-center justify-between w-full sm:w-auto gap-2 mt-2 sm:mt-0 relative z-10 shrink-0 min-w-fit whitespace-nowrap">
-                            <div className={cn("px-2 py-1 rounded text-xs uppercase font-bold",
-                                instance.status === 'running' ? 'bg-green-100 text-green-700' :
-                                    instance.status === 'error' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700')}>
-                                {instance.status}
-                            </div>
-                            <div className="flex gap-2">
-                                {instance.status !== 'running' ? (
-                                    <Button size="sm" type="button" onClick={() => handleStart(instance.id)}><Play className="h-4 w-4 mr-1" /> 启动</Button>
-                                ) : (
-                                    <Button size="sm" variant="destructive" type="button" onClick={() => handleStop(instance.id)}><Square className="h-4 w-4 mr-1" /> 停止</Button>
-                                )}
-                                <Button size="icon" variant="ghost" type="button" onClick={() => handleDelete(instance.id)}><Trash2 className="h-4 w-4 text-gray-500" /></Button>
-                            </div>
+                            <Button
+                                size="lg"
+                                variant="outline"
+                                className="w-full text-gray-600 border-gray-300 hover:bg-red-50 hover:text-red-600 hover:border-red-200 h-12 text-lg flex items-center justify-center gap-2"
+                                onClick={() => handleDelete(instance.id)}
+                            >
+                                <Trash2 className="h-5 w-5" /> 删除
+                            </Button>
                         </div>
                     </Card>
                 ))}
                 {instances.length === 0 && !loading && (
-                    <div className="text-center text-gray-500 py-12">未找到实例。请在上方添加一个。</div>
+                    <div className="col-span-full flex flex-col items-center justify-center p-12 text-center border-2 border-dashed rounded-xl bg-gray-50/50">
+                        <div className="p-4 bg-gray-100 rounded-full mb-4">
+                            <Plus className="h-8 w-8 text-gray-400" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">暂无服务实例</h3>
+                        <p className="text-gray-500 mb-6 max-w-sm">您还没有创建任何 MCP 服务实例。去服务市场挑选一个吧！</p>
+                        <Button size="lg" onClick={() => navigate('/marketplace')}>
+                            前往服务市场
+                        </Button>
+                    </div>
                 )}
             </div>
         </Layout>

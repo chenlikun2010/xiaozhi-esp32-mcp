@@ -8,7 +8,7 @@ dotenv.config();
 import { AuthController } from './controllers/AuthController';
 
 const app = express();
-const port = 3005;
+const port = process.env.PORT || 3005;
 
 app.use(express.json());
 
@@ -27,6 +27,7 @@ app.post('/login', AuthController.login);
 app.post('/change-password', authMiddleware, AuthController.changePassword);
 app.post('/forgot-password', AuthController.requestPasswordReset);
 app.post('/reset-password', AuthController.resetPassword);
+app.post('/activate', authMiddleware, AuthController.activate);
 
 app.get('/services', authMiddleware, ServiceController.list);
 
@@ -36,6 +37,18 @@ app.post('/instances', authMiddleware, InstanceController.create);
 app.post('/instances/:id/start', authMiddleware, InstanceController.start);
 app.post('/instances/:id/stop', authMiddleware, InstanceController.stop);
 app.delete('/instances/:id', authMiddleware, InstanceController.delete);
+
+// Admin Routes
+import { AdminController } from './controllers/AdminController';
+import { CodeController } from './controllers/CodeController';
+import { adminMiddleware } from './middleware/admin';
+
+app.get('/admin/users', authMiddleware, adminMiddleware, AdminController.listUsers);
+app.post('/admin/users', authMiddleware, adminMiddleware, AdminController.createUser);
+app.put('/admin/users/:id', authMiddleware, adminMiddleware, AdminController.updateUser);
+
+app.get('/admin/codes', authMiddleware, adminMiddleware, CodeController.listCodes);
+app.post('/admin/codes/generate', authMiddleware, adminMiddleware, CodeController.generateCodes);
 
 app.get('/', (req, res) => {
     res.send('Xiaozhi MCP Manager Backend');
@@ -63,7 +76,7 @@ const startServer = async () => {
 
             // Format: Name #ID
             const finalName = `${serviceName} #${inst.id}`;
-            const success = await InstanceManager.startInstance(inst.id, inst.xiaozhiWssUrl, finalName);
+            const success = await InstanceManager.startInstance(inst.id, inst.xiaozhiWssUrl, finalName, inst.userId); // userId required for expiry check
             if (success) {
                 console.log(`Instance ${inst.id} started successfully.`);
             } else {

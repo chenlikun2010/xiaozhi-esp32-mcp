@@ -43,12 +43,17 @@ export class AuthController {
                 return res.status(401).json({ message: "Invalid credentials" });
             }
 
-            const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '24h' });
+            const token = jwt.sign(
+                { userId: user.id, email: user.email, role: user.role || 'user' },
+                JWT_SECRET,
+                { expiresIn: '24h' }
+            );
 
             return res.json({
                 token,
                 user: {
                     email: user.email,
+                    role: user.role || 'user',
                     inviteCode: user.invitationCode,
                     expireDate: user.expireDate
                 }
@@ -99,6 +104,29 @@ export class AuthController {
 
             await userService.resetPassword(email, code, newPassword);
             return res.json({ message: "Password reset successfully" });
+        } catch (error: any) {
+            return res.status(400).json({ message: error.message });
+        }
+    }
+    static async activate(req: Request, res: Response) {
+        try {
+            const { code } = req.body;
+            // @ts-ignore
+            const userId = req.user?.userId;
+
+            if (!userId || !code) {
+                return res.status(400).json({ message: "Missing fields" });
+            }
+
+            const user = await userService.activateUser(userId, code);
+            return res.json({
+                message: "Account activated successfully",
+                user: {
+                    email: user.email,
+                    inviteCode: user.invitationCode,
+                    expireDate: user.expireDate
+                }
+            });
         } catch (error: any) {
             return res.status(400).json({ message: error.message });
         }

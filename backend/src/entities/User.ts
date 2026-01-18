@@ -11,6 +11,9 @@ export class User {
     @Column()
     password!: string;
 
+    @Column({ default: 'user' })
+    role!: string;
+
     @Column({ unique: true, name: 'invitation_code' })
     invitationCode!: string;
 

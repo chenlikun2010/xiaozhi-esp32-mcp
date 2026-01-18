@@ -12,20 +12,37 @@ export class XiaozhiMCPServer {
     private server: McpServer;
     private transport: WebSocketClientTransport;
     private isConnected: boolean = false;
-
     private serviceName: string;
+    private checkExpiry?: () => Promise<boolean>;
 
-    constructor(wssUrl: string, serviceName: string = "Xiaozhi MCP Service") {
+    constructor(wssUrl: string, serviceName: string = "Xiaozhi MCP Service", checkExpiry?: () => Promise<boolean>) {
         this.server = new McpServer({
             name: serviceName,
             version: "1.0.0"
         });
         this.serviceName = serviceName;
+        this.checkExpiry = checkExpiry;
 
         this.transport = new WebSocketClientTransport(wssUrl);
 
         // Register tools based on service name
         this.setupTools();
+    }
+
+    private async wrapHandler(handler: (args: any) => Promise<any>, args: any) {
+        if (this.checkExpiry) {
+            const isExpired = await this.checkExpiry();
+            if (isExpired) {
+                return {
+                    content: [{
+                        type: "text",
+                        text: "Service Expired. Please contact customer service to purchase activation time. (服务已到期，请联系客服购买激活时长)"
+                    }],
+                    isError: true
+                };
+            }
+        }
+        return await handler(args);
     }
 
     private setupTools() {
@@ -56,12 +73,12 @@ export class XiaozhiMCPServer {
         this.server.tool(
             "echo",
             { message: z.string() },
-            async ({ message }) => ({ content: [{ type: "text", text: `Echo: ${message}` }] })
+            async (args) => this.wrapHandler(async ({ message }) => ({ content: [{ type: "text", text: `Echo: ${message}` }] }), args)
         );
         this.server.tool(
             "get_server_time",
             {},
-            async () => ({ content: [{ type: "text", text: new Date().toISOString() }] })
+            async (args) => this.wrapHandler(async () => ({ content: [{ type: "text", text: new Date().toISOString() }] }), args)
         );
     }
 
@@ -69,7 +86,7 @@ export class XiaozhiMCPServer {
         this.server.tool(
             QwenSearchToolDefinition.name,
             QwenSearchToolDefinition.schema,
-            async (args) => await handleQwenSearch(args)
+            async (args) => this.wrapHandler(handleQwenSearch, args)
         );
     }
 
@@ -77,7 +94,7 @@ export class XiaozhiMCPServer {
         this.server.tool(
             HowToCookToolDefinition.name,
             HowToCookToolDefinition.schema,
-            async (args) => await handleHowToCook(args)
+            async (args) => this.wrapHandler(handleHowToCook, args)
         );
     }
 
@@ -85,17 +102,17 @@ export class XiaozhiMCPServer {
         this.server.tool(
             StartMbtiTestDefinition.name,
             StartMbtiTestDefinition.schema,
-            async (args) => await handleStartMbtiTest(args)
+            async (args) => this.wrapHandler(handleStartMbtiTest, args)
         );
         this.server.tool(
             AnswerQuestionDefinition.name,
             AnswerQuestionDefinition.schema,
-            async (args) => await handleAnswerQuestion(args)
+            async (args) => this.wrapHandler(handleAnswerQuestion, args)
         );
         this.server.tool(
             CalculateMbtiResultDefinition.name,
             CalculateMbtiResultDefinition.schema,
-            async (args) => await handleCalculateResult(args)
+            async (args) => this.wrapHandler(handleCalculateResult, args)
         );
     }
 
@@ -103,12 +120,12 @@ export class XiaozhiMCPServer {
         this.server.tool(
             GetStockQuoteDefinition.name,
             GetStockQuoteDefinition.schema,
-            async (args) => await handleGetStockQuote(args)
+            async (args) => this.wrapHandler(handleGetStockQuote, args)
         );
         this.server.tool(
             GetStockHistoryDefinition.name,
             GetStockHistoryDefinition.schema,
-            async (args) => await handleGetStockHistory(args)
+            async (args) => this.wrapHandler(handleGetStockHistory, args)
         );
     }
 
@@ -116,12 +133,12 @@ export class XiaozhiMCPServer {
         this.server.tool(
             GetExchangeRateDefinition.name,
             GetExchangeRateDefinition.schema,
-            async (args) => await handleGetExchangeRate(args)
+            async (args) => this.wrapHandler(handleGetExchangeRate, args)
         );
         this.server.tool(
             ConvertCurrencyDefinition.name,
             ConvertCurrencyDefinition.schema,
-            async (args) => await handleConvertCurrency(args)
+            async (args) => this.wrapHandler(handleConvertCurrency, args)
         );
     }
 
@@ -129,7 +146,7 @@ export class XiaozhiMCPServer {
         this.server.tool(
             SearchTrainTicketsDefinition.name,
             SearchTrainTicketsDefinition.schema,
-            async (args) => await handleSearchTrainTickets(args)
+            async (args) => this.wrapHandler(handleSearchTrainTickets, args)
         );
     }
 

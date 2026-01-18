@@ -7,6 +7,7 @@ import { User } from "./entities/User";
 import { MCPService } from "./entities/MCPService";
 import { UserMCPInstance } from "./entities/UserMCPInstance";
 import { VerificationCode } from './entities/VerificationCode';
+import { ActivationCode } from './entities/ActivationCode';
 
 export const AppDataSource = new DataSource({
     type: "mysql",
@@ -17,7 +18,7 @@ export const AppDataSource = new DataSource({
     database: process.env.DB_NAME || "mcplist",
     synchronize: true, // Auto-schema sync for dev
     logging: false,
-    entities: [MCPService, UserMCPInstance, User, VerificationCode],
+    entities: [MCPService, UserMCPInstance, User, VerificationCode, ActivationCode],
     subscribers: [],
     migrations: [],
 });

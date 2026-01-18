@@ -1,6 +1,7 @@
 import { AppDataSource } from "../db";
 import { User } from "../entities/User";
 import { VerificationCode } from "../entities/VerificationCode";
+import { ActivationCode } from "../entities/ActivationCode";
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -125,5 +126,39 @@ export class UserService {
 
         // Invalidate code after use
         await this.verificationCodeRepository.delete({ email });
+    }
+    async activateUser(userId: number, code: string): Promise<User> {
+        const user = await this.userRepository.findOneBy({ id: userId });
+        if (!user) throw new Error("User not found");
+
+        const activationRepo = AppDataSource.getRepository(ActivationCode);
+        const activationCode = await activationRepo.findOneBy({ code });
+
+        if (!activationCode) {
+            throw new Error("Invalid activation code");
+        }
+
+        if (activationCode.isUsed) {
+            throw new Error("Activation code has already been used");
+        }
+
+        // Calculate new expiry
+        const currentExpire = new Date(user.expireDate);
+        const now = new Date();
+
+        // If already expired, start from now. If active, add to current expiry.
+        let newExpire = currentExpire > now ? currentExpire : now;
+        newExpire = new Date(newExpire.getTime() + activationCode.durationDays * 24 * 60 * 60 * 1000);
+
+        user.expireDate = newExpire;
+        await this.userRepository.save(user);
+
+        // Mark code as used
+        activationCode.isUsed = true;
+        activationCode.usedBy = userId;
+        activationCode.usedAt = new Date();
+        await activationRepo.save(activationCode);
+
+        return user;
     }
 }

@@ -4,8 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import Layout from '../components/Layout';
-import { Plus, Play, Square, Trash2, Power } from 'lucide-react';
+import { Plus, Play, Square, Trash2, Power, CreditCard, AlertTriangle } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { ActivationModal } from '../components/ActivationModal';
+
 
 interface Instance {
     id: number;
@@ -24,6 +26,12 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    const [showActivateModal, setShowActivateModal] = useState(false);
+
+    // Check expiration
+    const expireDate = user.expireDate ? new Date(user.expireDate) : null;
+    const isExpired = expireDate ? expireDate < new Date() : false;
 
     // Add token interceptor
     useEffect(() => {
@@ -46,10 +54,14 @@ export default function Dashboard() {
     };
 
     useEffect(() => {
-        fetchInstances();
-        const interval = setInterval(fetchInstances, 5000); // Poll every 5s
-        return () => clearInterval(interval);
-    }, []);
+        if (!isExpired) {
+            fetchInstances();
+            const interval = setInterval(fetchInstances, 5000); // Poll every 5s
+            return () => clearInterval(interval);
+        } else {
+            setLoading(false);
+        }
+    }, [isExpired]);
 
     const handleStart = async (id: number) => {
         try {
@@ -78,6 +90,48 @@ export default function Dashboard() {
             console.error(error);
         }
     };
+
+    if (isExpired) {
+        return (
+            <Layout>
+                <div className="mb-8">
+                    <h2 className="text-2xl md:text-3xl font-bold">欢迎回来, {user.email?.split('@')[0]}</h2>
+                </div>
+
+                <Card className="bg-[#1e293b] text-white border-0 p-8 min-h-[400px] flex flex-col">
+                    <h3 className="text-lg font-medium text-gray-300 mb-8">用户激活状态</h3>
+
+                    <div className="flex-1 flex flex-col justify-center items-start space-y-4">
+                        <div className="flex items-center text-red-400 gap-2 mb-2">
+                            <AlertTriangle className="h-5 w-5" />
+                            <span className="font-bold text-lg">试用期已过期</span>
+                        </div>
+
+                        <p className="text-gray-400">请购买激活时长继续使用服务</p>
+
+                        <p className="text-gray-500 text-sm">
+                            使用到期时间: {expireDate ? expireDate.toLocaleString() : 'N/A'}
+                        </p>
+                    </div>
+
+                    <div className="flex justify-center mt-8">
+                        <Button
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-8 py-6 text-lg"
+                            onClick={() => setShowActivateModal(true)}
+                        >
+                            <CreditCard className="mr-2 h-5 w-5" /> 购买激活时长
+                        </Button>
+                    </div>
+                </Card>
+
+                <ActivationModal
+                    isOpen={showActivateModal}
+                    onClose={() => setShowActivateModal(false)}
+                    onSuccess={() => window.location.reload()}
+                />
+            </Layout>
+        );
+    }
 
     return (
         <Layout>

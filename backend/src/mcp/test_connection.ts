@@ -4,7 +4,7 @@ dotenv.config();
 import { XiaozhiMCPServer } from "./XiaozhiMCPServer";
 import { handleQwenSearch } from "./tools/QwenSearchTool";
 
-const WSS_URL = "wss://api.xiaozhi.me/mcp/?token=eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE5ODE1NywiYWdlbnRJZCI6NzU5NDQwLCJlbmRwb2ludElkIjoiYWdlbnRfNzU5NDQwIiwicHVycG9zZSI6Im1jcC1lbmRwb2ludCIsImlhdCI6MTc2ODM3NDM3NCwiZXhwIjoxNzk5OTMxOTc0fQ.jiUyx84ZKMThe2CzkwkiZP6HwoD3wlVJO4UBmLmFRlyu2_gm_QgSmJhtcywR2m2pgPqObcFwOvA7zNWE9WW6dg";
+const WSS_URL = "wss://api.nocode.cd/mcp/?token=eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE5ODE1NywiYWdlbnRJZCI6NzU5NDQwLCJlbmRwb2ludElkIjoiYWdlbnRfNzU5NDQwIiwicHVycG9zZSI6Im1jcC1lbmRwb2ludCIsImlhdCI6MTc2ODM3NDM3NCwiZXhwIjoxNzk5OTMxOTc0fQ.jiUyx84ZKMThe2CzkwkiZP6HwoD3wlVJO4UBmLmFRlyu2_gm_QgSmJhtcywR2m2pgPqObcFwOvA7zNWE9WW6dg";
 
 async function testConnection() {
     console.log("=== Testing 1: Local Search Tool Logic ===");

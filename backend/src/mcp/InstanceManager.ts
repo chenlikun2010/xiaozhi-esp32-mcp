@@ -13,14 +13,39 @@ class InstanceManager {
         return InstanceManager.instance;
     }
 
-    public async startInstance(dbId: number, wssUrl: string, serviceName: string): Promise<boolean> {
+    public async startInstance(dbId: number, wssUrl: string, serviceName: string, userId: number): Promise<boolean> {
         if (this.activeInstances.has(dbId)) {
             console.log(`Instance ${dbId} is already running.`);
             return true;
         }
 
+        const checkExpiry = async (): Promise<boolean> => {
+            try {
+                // Dynamic import to avoid circular dependency if any, or just use AppDataSource
+                const { AppDataSource } = await import('../db');
+                const { User } = await import('../entities/User');
+                const userRepo = AppDataSource.getRepository(User);
+                const user = await userRepo.findOneBy({ id: userId });
+                if (!user) return true; // Block if user not found
+
+                const now = new Date();
+                const isExpired = new Date(user.expireDate) < now;
+                if (isExpired) {
+                    console.log(`User ${userId} expired at ${user.expireDate}. Blocking tool execution.`);
+                }
+                return isExpired;
+            } catch (err) {
+                console.error("Error checking expiry:", err);
+                return false; // Default to allow if DB error? Or block? Safe to allow to avoid interruption on transient error?
+                // But safer for business to block. Let's block on error for now or allow. 
+                // Current Requirement: prompt expired.
+                // Let's assume on error we don't block unless we know it's expired.
+                return false;
+            }
+        };
+
         try {
-            const mcpServer = new XiaozhiMCPServer(wssUrl, serviceName);
+            const mcpServer = new XiaozhiMCPServer(wssUrl, serviceName, checkExpiry);
             await mcpServer.connect();
             this.activeInstances.set(dbId, mcpServer);
             return true;

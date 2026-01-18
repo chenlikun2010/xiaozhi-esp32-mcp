@@ -61,6 +61,15 @@ export class InstanceController {
             const id = parseInt(req.params.id as string);
             const user = (req as any).user;
 
+            // Check Expiry First
+            const userRepo = AppDataSource.getRepository(require('../entities/User').User);
+            const userData = await userRepo.findOneBy({ id: user.userId });
+            if (!userData) return res.status(404).json({ message: "User not found" });
+
+            if (new Date(userData.expireDate) < new Date()) {
+                return res.status(403).json({ message: "Service Expired. Please buy activation time." });
+            }
+
             const repo = AppDataSource.getRepository(UserMCPInstance);
             const instance = await repo.findOne({ where: { id, userId: user.userId } });
 
@@ -71,8 +80,13 @@ export class InstanceController {
             const serviceDef = await serviceRepo.findOne({ where: { id: instance.serviceId } });
             const serviceName = serviceDef ? serviceDef.name : `User_${user.userId}_Service`;
 
-            // Start with meaningful name
-            const success = await InstanceManager.startInstance(instance.id, instance.xiaozhiWssUrl, `${serviceName} #${instance.id}`);
+            // Start with meaningful name and userId
+            const success = await InstanceManager.startInstance(
+                instance.id,
+                instance.xiaozhiWssUrl,
+                `${serviceName} #${instance.id}`,
+                user.userId
+            );
 
             if (success) {
                 instance.status = 'running';

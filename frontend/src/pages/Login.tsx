@@ -17,7 +17,12 @@ export default function Login() {
             const res = await axios.post('/api/login', { email, password });
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('user', JSON.stringify(res.data.user));
-            navigate('/dashboard');
+
+            if (res.data.user.role === 'admin') {
+                navigate('/admin/dashboard');
+            } else {
+                navigate('/dashboard');
+            }
         } catch (err: any) {
             setError(err.response?.data?.message || '登录失败');
         }

@@ -82,7 +82,7 @@ export default function Marketplace() {
                                 <div>
                                     <label className="text-sm font-medium mb-1 block">WebSocket 地址</label>
                                     <Input
-                                        placeholder="wss://api.xiaozhi.me/mcp/?token=..."
+                                        placeholder="wss://api.nocode.cd/mcp/?token=..."
                                         value={wssUrl}
                                         onChange={e => setWssUrl(e.target.value)}
                                         className="font-mono text-sm"

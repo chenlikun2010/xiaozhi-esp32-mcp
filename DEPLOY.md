@@ -201,7 +201,7 @@ sudo systemctl restart nginx
   cd ~/app
   git pull
 
-  # 2. 更新后端 (安装新依赖 yahoo-finance2 等)
+  # 2. 更新后端 (安装新依赖 uuid, mysql2 等)
   cd backend
   npm install
   npm run build
@@ -212,16 +212,17 @@ sudo systemctl restart nginx
   npx ts-node src/scripts/add_mbti_service.ts
   npx ts-node src/scripts/add_stock_service.ts
   npx ts-node src/scripts/add_exchange_service.ts
-  npx ts-node src/scripts/add_exchange_service.ts
   npx ts-node src/scripts/add_train_service.ts
-  # npx ts-node src/scripts/add_flight_service.ts (Experimental, disabled by default)
 
-  # 4. 重启后端服务
+  # 【本次新增】创建初始管理员账号
+  npx ts-node src/scripts/create_admin.ts <admin_email> <password>
+  
+  # 4. 重启后端服务 (TypeORM 会自动同步数据库结构，添加 activation_code 表和 user.role 字段)
   pm2 restart mcp-backend
 
-  # 5. 更新前端 (可选，如果前端有修改)
+  # 5. 更新前端 (本次有重大更新：管理后台)
   cd ../frontend
   npm install
   npm run build
-  # 此时 Nginx 会自动服务新的 dist 文件，无需重启 Nginx (除非修改了 nginx 配置)
+  # 此时 Nginx 会自动服务新的 dist 文件，无需重启 Nginx
   ```

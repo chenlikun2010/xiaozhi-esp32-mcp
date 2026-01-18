@@ -64,7 +64,7 @@ export class XiaozhiMCPServer {
         // Conditional Registration
         if (this.serviceName.includes("联网搜索")) {
             this.registerQwenSearchTool();
-        } else if (this.serviceName.includes("做饭")) {
+        } else if (this.serviceName.includes("做饭") || this.serviceName.includes("菜谱")) {
             this.registerCookTool();
         } else if (this.serviceName.includes("MBTI") || this.serviceName.includes("性格测试")) {
             this.registerMbtiTools();

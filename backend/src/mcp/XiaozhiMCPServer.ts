@@ -7,6 +7,7 @@ import { StartMbtiTestDefinition, AnswerQuestionDefinition, CalculateMbtiResultD
 import { GetStockQuoteDefinition, GetStockHistoryDefinition, handleGetStockQuote, handleGetStockHistory } from "./tools/StockTool";
 import { GetExchangeRateDefinition, ConvertCurrencyDefinition, handleGetExchangeRate, handleConvertCurrency } from "./tools/ExchangeRateTool";
 import { SearchTrainTicketsDefinition, handleSearchTrainTickets } from "./tools/TrainTicketTool";
+import { GetGoldPriceDefinition, handleGetGoldPrice } from "./tools/GoldPriceTool";
 
 export class XiaozhiMCPServer {
     private server: McpServer;
@@ -64,9 +65,19 @@ export class XiaozhiMCPServer {
             this.registerExchangeTools();
         } else if (this.serviceName.includes("12306") || this.serviceName.includes("火车票")) {
             this.registerTrainTools();
+        } else if (this.serviceName.includes("黄金") || this.serviceName.includes("Gold")) {
+            this.registerGoldTools();
         } else {
             console.warn(`Unknown service name: ${this.serviceName}. Only base tools registered.`);
         }
+    }
+
+    private registerGoldTools() {
+        this.server.tool(
+            GetGoldPriceDefinition.name,
+            GetGoldPriceDefinition.schema,
+            async (args) => this.wrapHandler(handleGetGoldPrice, args)
+        );
     }
 
     private registerBaseTools() {

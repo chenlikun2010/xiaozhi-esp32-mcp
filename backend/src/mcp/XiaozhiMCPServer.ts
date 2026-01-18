@@ -7,7 +7,6 @@ import { StartMbtiTestDefinition, AnswerQuestionDefinition, CalculateMbtiResultD
 import { GetStockQuoteDefinition, GetStockHistoryDefinition, handleGetStockQuote, handleGetStockHistory } from "./tools/StockTool";
 import { GetExchangeRateDefinition, ConvertCurrencyDefinition, handleGetExchangeRate, handleConvertCurrency } from "./tools/ExchangeRateTool";
 import { SearchTrainTicketsDefinition, handleSearchTrainTickets } from "./tools/TrainTicketTool";
-import { SearchFlightTicketsDefinition, handleSearchFlightTickets } from "./tools/FlightTicketTool";
 
 export class XiaozhiMCPServer {
     private server: McpServer;
@@ -48,8 +47,6 @@ export class XiaozhiMCPServer {
             this.registerExchangeTools();
         } else if (this.serviceName.includes("12306") || this.serviceName.includes("火车票")) {
             this.registerTrainTools();
-        } else if (this.serviceName.includes("机票") || this.serviceName.includes("携程")) {
-            this.registerFlightTools();
         } else {
             console.warn(`Unknown service name: ${this.serviceName}. Only base tools registered.`);
         }
@@ -136,13 +133,7 @@ export class XiaozhiMCPServer {
         );
     }
 
-    private registerFlightTools() {
-        this.server.tool(
-            SearchFlightTicketsDefinition.name,
-            SearchFlightTicketsDefinition.schema,
-            async (args) => await handleSearchFlightTickets(args)
-        );
-    }
+
 
     async connect() {
         if (this.isConnected) return;

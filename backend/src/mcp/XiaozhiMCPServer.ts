@@ -30,10 +30,12 @@ export class XiaozhiMCPServer {
         this.setupTools();
     }
 
-    private async wrapHandler(handler: (args: any) => Promise<any>, args: any) {
+    private async wrapHandler(handler: (args: any) => Promise<any>, args: any, toolName: string) {
+        console.log(`[MCP] Request ${toolName} args:`, JSON.stringify(args));
         if (this.checkExpiry) {
             const isExpired = await this.checkExpiry();
             if (isExpired) {
+                console.log(`[MCP] User expired. Blocking ${toolName}`);
                 return {
                     content: [{
                         type: "text",
@@ -43,7 +45,14 @@ export class XiaozhiMCPServer {
                 };
             }
         }
-        return await handler(args);
+        try {
+            const result = await handler(args);
+            console.log(`[MCP] Result ${toolName}:`, JSON.stringify(result).substring(0, 200) + "...");
+            return result;
+        } catch (error: any) {
+            console.error(`[MCP] Error ${toolName}:`, error);
+            throw error;
+        }
     }
 
     private setupTools() {
@@ -76,7 +85,7 @@ export class XiaozhiMCPServer {
         this.server.tool(
             GetGoldPriceDefinition.name,
             GetGoldPriceDefinition.schema,
-            async (args) => this.wrapHandler(handleGetGoldPrice, args)
+            async (args) => this.wrapHandler(handleGetGoldPrice, args, GetGoldPriceDefinition.name)
         );
     }
 
@@ -84,12 +93,12 @@ export class XiaozhiMCPServer {
         this.server.tool(
             "echo",
             { message: z.string() },
-            async (args) => this.wrapHandler(async ({ message }) => ({ content: [{ type: "text", text: `Echo: ${message}` }] }), args)
+            async (args) => this.wrapHandler(async ({ message }) => ({ content: [{ type: "text", text: `Echo: ${message}` }] }), args, "echo")
         );
         this.server.tool(
             "get_server_time",
             {},
-            async (args) => this.wrapHandler(async () => ({ content: [{ type: "text", text: new Date().toISOString() }] }), args)
+            async (args) => this.wrapHandler(async () => ({ content: [{ type: "text", text: new Date().toISOString() }] }), args, "get_server_time")
         );
     }
 
@@ -97,7 +106,7 @@ export class XiaozhiMCPServer {
         this.server.tool(
             QwenSearchToolDefinition.name,
             QwenSearchToolDefinition.schema,
-            async (args) => this.wrapHandler(handleQwenSearch, args)
+            async (args) => this.wrapHandler(handleQwenSearch, args, QwenSearchToolDefinition.name)
         );
     }
 
@@ -105,7 +114,7 @@ export class XiaozhiMCPServer {
         this.server.tool(
             HowToCookToolDefinition.name,
             HowToCookToolDefinition.schema,
-            async (args) => this.wrapHandler(handleHowToCook, args)
+            async (args) => this.wrapHandler(handleHowToCook, args, HowToCookToolDefinition.name)
         );
     }
 
@@ -113,17 +122,17 @@ export class XiaozhiMCPServer {
         this.server.tool(
             StartMbtiTestDefinition.name,
             StartMbtiTestDefinition.schema,
-            async (args) => this.wrapHandler(handleStartMbtiTest, args)
+            async (args) => this.wrapHandler(handleStartMbtiTest, args, StartMbtiTestDefinition.name)
         );
         this.server.tool(
             AnswerQuestionDefinition.name,
             AnswerQuestionDefinition.schema,
-            async (args) => this.wrapHandler(handleAnswerQuestion, args)
+            async (args) => this.wrapHandler(handleAnswerQuestion, args, AnswerQuestionDefinition.name)
         );
         this.server.tool(
             CalculateMbtiResultDefinition.name,
             CalculateMbtiResultDefinition.schema,
-            async (args) => this.wrapHandler(handleCalculateResult, args)
+            async (args) => this.wrapHandler(handleCalculateResult, args, CalculateMbtiResultDefinition.name)
         );
     }
 
@@ -131,12 +140,12 @@ export class XiaozhiMCPServer {
         this.server.tool(
             GetStockQuoteDefinition.name,
             GetStockQuoteDefinition.schema,
-            async (args) => this.wrapHandler(handleGetStockQuote, args)
+            async (args) => this.wrapHandler(handleGetStockQuote, args, GetStockQuoteDefinition.name)
         );
         this.server.tool(
             GetStockHistoryDefinition.name,
             GetStockHistoryDefinition.schema,
-            async (args) => this.wrapHandler(handleGetStockHistory, args)
+            async (args) => this.wrapHandler(handleGetStockHistory, args, GetStockHistoryDefinition.name)
         );
     }
 
@@ -144,12 +153,12 @@ export class XiaozhiMCPServer {
         this.server.tool(
             GetExchangeRateDefinition.name,
             GetExchangeRateDefinition.schema,
-            async (args) => this.wrapHandler(handleGetExchangeRate, args)
+            async (args) => this.wrapHandler(handleGetExchangeRate, args, GetExchangeRateDefinition.name)
         );
         this.server.tool(
             ConvertCurrencyDefinition.name,
             ConvertCurrencyDefinition.schema,
-            async (args) => this.wrapHandler(handleConvertCurrency, args)
+            async (args) => this.wrapHandler(handleConvertCurrency, args, ConvertCurrencyDefinition.name)
         );
     }
 
@@ -157,7 +166,7 @@ export class XiaozhiMCPServer {
         this.server.tool(
             SearchTrainTicketsDefinition.name,
             SearchTrainTicketsDefinition.schema,
-            async (args) => this.wrapHandler(handleSearchTrainTickets, args)
+            async (args) => this.wrapHandler(handleSearchTrainTickets, args, SearchTrainTicketsDefinition.name)
         );
     }
 

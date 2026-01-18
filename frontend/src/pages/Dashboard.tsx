@@ -180,8 +180,16 @@ export default function Dashboard() {
                                 <div className="flex items-center gap-2">
                                     <code className="text-xs flex-1 truncate select-all">{instance.xiaozhiWssUrl}</code>
                                     <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => {
-                                        navigator.clipboard.writeText(instance.xiaozhiWssUrl);
-                                        // Optional: Add toast notification here
+                                        const text = instance.xiaozhiWssUrl;
+                                        if (navigator.clipboard && window.isSecureContext) {
+                                            navigator.clipboard.writeText(text).then(() => {
+                                                alert("WebSocket 地址已复制到剪贴板！");
+                                            }).catch(() => {
+                                                prompt("复制失败，请手动复制：", text);
+                                            });
+                                        } else {
+                                            prompt("请手动复制 WebSocket 地址：", text);
+                                        }
                                     }}>
                                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>
                                     </Button>

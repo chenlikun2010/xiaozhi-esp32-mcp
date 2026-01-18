@@ -23,8 +23,8 @@ export default function Register() {
     };
 
     return (
-        <div className="flex h-screen items-center justify-center bg-gray-100">
-            <Card className="w-[350px]">
+        <div className="flex h-screen items-center justify-center bg-gray-100 p-4">
+            <Card className="w-full max-w-[350px]">
                 <CardHeader>
                     <CardTitle>注册</CardTitle>
                 </CardHeader>

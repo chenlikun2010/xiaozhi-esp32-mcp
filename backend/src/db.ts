@@ -3,17 +3,18 @@ import { DataSource } from "typeorm";
 import { User } from "./entities/User";
 import { MCPService } from "./entities/MCPService";
 import { UserMCPInstance } from "./entities/UserMCPInstance";
+import { VerificationCode } from './entities/VerificationCode';
 
 export const AppDataSource = new DataSource({
     type: "mysql",
-    host: "8.140.51.220",
-    port: 3306,
-    username: "mcpadmin",
-    password: "Mcp@20260109",
-    database: "mcplist",
-    synchronize: true, // Auto-create tables for dev
+    host: process.env.DB_HOST || "localhost",
+    port: parseInt(process.env.DB_PORT || "3306"),
+    username: process.env.DB_USER || "root",
+    password: process.env.DB_PASSWORD || "password",
+    database: process.env.DB_NAME || "mcplist",
+    synchronize: true, // Auto-schema sync for dev
     logging: false,
-    entities: [User, MCPService, UserMCPInstance],
+    entities: [MCPService, UserMCPInstance, User, VerificationCode],
     subscribers: [],
     migrations: [],
 });

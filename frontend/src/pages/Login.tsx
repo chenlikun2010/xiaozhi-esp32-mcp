@@ -24,8 +24,8 @@ export default function Login() {
     };
 
     return (
-        <div className="flex h-screen items-center justify-center bg-gray-100">
-            <Card className="w-[350px]">
+        <div className="flex h-screen items-center justify-center bg-gray-100 p-4">
+            <Card className="w-full max-w-[350px]">
                 <CardHeader>
                     <CardTitle>登录</CardTitle>
                 </CardHeader>
@@ -45,8 +45,9 @@ export default function Login() {
                         />
                         {error && <p className="text-red-500 text-sm">{error}</p>}
                         <Button type="submit" className="w-full">登录</Button>
-                        <div className="text-center text-sm">
+                        <div className="flex justify-between text-sm mt-4">
                             <Link to="/register" className="text-blue-500">没账号？注册</Link>
+                            <Link to="/forgot-password" className="text-gray-500 hover:text-gray-700">忘记密码？</Link>
                         </div>
                     </form>
                 </CardContent>

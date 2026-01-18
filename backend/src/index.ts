@@ -24,6 +24,10 @@ import { authMiddleware } from './middleware/auth';
 // Routes
 app.post('/register', AuthController.register);
 app.post('/login', AuthController.login);
+app.post('/change-password', authMiddleware, AuthController.changePassword);
+app.post('/forgot-password', AuthController.requestPasswordReset);
+app.post('/reset-password', AuthController.resetPassword);
+
 app.get('/services', authMiddleware, ServiceController.list);
 
 // Instance Routes

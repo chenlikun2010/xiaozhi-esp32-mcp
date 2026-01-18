@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
+import Layout from '../components/Layout';
 import { Plus } from 'lucide-react';
 import { Input } from '../components/ui/input';
 
@@ -46,19 +47,9 @@ export default function Marketplace() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex">
-            {/* Sidebar (Duplicate for now, should be a layout) */}
-            <div className="w-64 bg-white border-r p-6 hidden md:block">
-                <h1 className="text-2xl font-bold mb-8 text-primary">小智 MCP</h1>
-                <nav className="space-y-2">
-                    <Button variant="ghost" className="w-full justify-start" onClick={() => navigate('/dashboard')}>仪表盘</Button>
-                    <Button variant="secondary" className="w-full justify-start">服务市场</Button>
-                    <Button variant="ghost" className="w-full justify-start">设置</Button>
-                </nav>
-            </div>
-
-            <div className="flex-1 p-8">
-                <h2 className="text-3xl font-bold mb-8">服务市场</h2>
+        <Layout>
+            <div className="max-w-7xl mx-auto">
+                <h2 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">服务市场</h2>
 
                 {/* Service List */}
                 {!selectedService ? (
@@ -83,7 +74,7 @@ export default function Marketplace() {
                 ) : (
                     /* Installation Form */
                     <div className="max-w-2xl mx-auto">
-                        <Button variant="ghost" onClick={() => setSelectedService(null)} className="mb-4">← 返回市场</Button>
+                        <Button variant="ghost" onClick={() => setSelectedService(null)} className="mb-4 pl-0 hover:bg-transparent hover:text-primary">← 返回市场</Button>
                         <Card>
                             <CardHeader>
                                 <CardTitle>安装 {selectedService.name}</CardTitle>
@@ -102,7 +93,7 @@ export default function Marketplace() {
                                         这是小智平台为该智能体提供的 WebSocket 连接地址。
                                     </p>
                                 </div>
-                                <div className="flex justify-end gap-2">
+                                <div className="flex justify-end gap-2 pt-4">
                                     <Button variant="outline" onClick={() => setSelectedService(null)}>取消</Button>
                                     <Button onClick={handleAdd} disabled={!wssUrl}>添加实例</Button>
                                 </div>
@@ -111,6 +102,6 @@ export default function Marketplace() {
                     </div>
                 )}
             </div>
-        </div>
+        </Layout>
     );
 }

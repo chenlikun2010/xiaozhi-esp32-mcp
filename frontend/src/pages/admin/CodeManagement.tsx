@@ -1,8 +1,8 @@
 
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
 import { format } from 'date-fns';
 
 interface ActivationCode {
@@ -64,7 +64,7 @@ export default function CodeManagement() {
                             min={1}
                             max={100}
                             value={genCount}
-                            onChange={e => setGenCount(parseInt(e.target.value))}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGenCount(parseInt(e.target.value))}
                             className="w-20"
                         />
                     </div>
@@ -73,7 +73,7 @@ export default function CodeManagement() {
                         <Input
                             type="number"
                             value={genDays}
-                            onChange={e => setGenDays(parseInt(e.target.value))}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGenDays(parseInt(e.target.value))}
                             className="w-24"
                         />
                     </div>

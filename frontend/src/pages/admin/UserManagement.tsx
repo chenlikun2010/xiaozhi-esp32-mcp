@@ -1,8 +1,8 @@
 
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
 import { format } from 'date-fns';
 
 interface User {
@@ -78,7 +78,7 @@ export default function UserManagement() {
                                             <Input
                                                 type="datetime-local"
                                                 value={editExpire}
-                                                onChange={e => setEditExpire(e.target.value)}
+                                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditExpire(e.target.value)}
                                                 className="h-8 w-48 text-xs"
                                             />
                                         </div>

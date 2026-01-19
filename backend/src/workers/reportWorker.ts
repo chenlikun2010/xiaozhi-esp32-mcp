@@ -464,6 +464,17 @@ async function processReport(report: Report): Promise<void> {
         await updateReportStatus(report.id, 'completed');
         console.log(`[Worker] ✅ Report ${report.id} completed successfully`);
 
+        // 8. 删除已处理的 PDF 文件以节省空间
+        try {
+            if (fs.existsSync(localPath)) {
+                fs.unlinkSync(localPath);
+                console.log(`[Worker] 🗑️ Deleted PDF file: ${fileName}`);
+            }
+        } catch (cleanupError) {
+            // 清理失败不影响主流程，仅记录警告
+            console.warn(`[Worker] ⚠️ Failed to delete PDF file: ${fileName}`, cleanupError);
+        }
+
     } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         console.error(`[Worker] ❌ Error processing report ${report.id}:`, errorMessage);

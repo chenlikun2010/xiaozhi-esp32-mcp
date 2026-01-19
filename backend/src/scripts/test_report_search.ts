@@ -1,26 +1,41 @@
-
-import { ReportService } from "../services/ReportService";
+// Quick test for Report Search functionality
+import 'dotenv/config';
+import { ReportService } from '../services/ReportService';
 
 async function main() {
+    const query = '2026年世界经济展望';
+    console.log(`\n=== Testing Report Search ===`);
+    console.log(`Query: "${query}"\n`);
+
     try {
-        const query = "2026年全球趋势";
-        console.log(`Searching for: "${query}"...`);
+        const results = await ReportService.search(query, 3);
 
-        const results = await ReportService.search(query);
+        if (results.length === 0) {
+            console.log('No results found.');
+        } else {
+            console.log(`Found ${results.length} results:\n`);
+            results.forEach((r, i) => {
+                console.log(`[${i + 1}] ${r.title}`);
+                console.log(`    Similarity: ${(r.similarity * 100).toFixed(2)}%`);
+                console.log(`    URL: ${r.word_url}`);
+                console.log(`    Content preview: ${r.content?.substring(0, 100)}...`);
+                console.log('');
+            });
+        }
 
-        console.log(`Found ${results.length} results:`);
-        results.forEach((r, i) => {
-            console.log(`\n[${i + 1}] ${r.title}`);
-            console.log(`    Similarity: ${r.similarity}`);
-            console.log(`    Date: ${r.publish_time}`);
-            console.log(`    Snippet: ${r.content.substring(0, 100)}...`);
-        });
+        // Test answer generation if results found
+        if (results.length > 0) {
+            console.log(`\n=== Testing Answer Generation ===\n`);
+            const answer = await ReportService.generateAnswer(query, results);
+            console.log('Generated Answer:');
+            console.log(answer);
+        }
 
-        process.exit(0);
-    } catch (error) {
-        console.error("Error:", error);
-        process.exit(1);
+    } catch (error: any) {
+        console.error('Test failed:', error.message);
     }
+
+    process.exit(0);
 }
 
 main();

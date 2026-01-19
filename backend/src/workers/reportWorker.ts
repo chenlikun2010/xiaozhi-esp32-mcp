@@ -20,7 +20,7 @@ import pRetry, { AbortError } from 'p-retry';
 import cron from 'node-cron';
 
 // pdf-parse v2.x 导出 PDFParse 类
-import { PDFParse } from 'pdf-parse';
+import PDFParse from 'pdf-parse';
 
 // 类型定义
 interface AxiosErrorLike {
@@ -90,7 +90,7 @@ const pool = new Pool({
 });
 
 // 设置搜索路径
-pool.on('connect', (client) => {
+pool.on('connect', (client: any) => {
     client.query(`SET search_path TO ${config.postgres.schema}, public`);
 });
 
@@ -266,7 +266,7 @@ async function getEmbeddingWithRetry(text: string): Promise<number[]> {
         {
             retries: config.embeddingRetries,
             minTimeout: config.embeddingRetryDelay,
-            onFailedAttempt: (error) => {
+            onFailedAttempt: (error: any) => {
                 console.log(`[Embedding] Attempt ${error.attemptNumber} failed. ${error.retriesLeft} retries left.`);
             },
         }
@@ -300,10 +300,9 @@ async function extractTextFromPdf(filePath: string): Promise<string> {
     const dataBuffer = fs.readFileSync(filePath);
     // pdf-parse v2.x 需要 Uint8Array 而不是 Buffer
     const uint8Array = new Uint8Array(dataBuffer);
-    const parser = new PDFParse(uint8Array);
-    const result = await parser.getText();
-    // 返回结果可能是对象，提取 text 属性
-    return typeof result === 'string' ? result : (result as any).text || String(result);
+    // pdf-parse library acts as a function
+    const result = await PDFParse(Buffer.from(uint8Array));
+    return result.text;
 }
 
 // ============================================================

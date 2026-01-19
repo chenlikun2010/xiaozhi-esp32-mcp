@@ -30,7 +30,7 @@ async function checkProgress() {
         `);
 
         let total = 0;
-        countRes.rows.forEach(row => {
+        countRes.rows.forEach((row: any) => {
             console.log(`[${row.status.toUpperCase()}]: ${row.count}`);
             total += parseInt(row.count);
         });
@@ -46,7 +46,7 @@ async function checkProgress() {
             LIMIT 5
         `);
 
-        latestRes.rows.forEach(row => {
+        latestRes.rows.forEach((row: any) => {
             console.log(`[ID:${row.id}] ${row.title} (Time: ${row.created_at})`);
         });
 

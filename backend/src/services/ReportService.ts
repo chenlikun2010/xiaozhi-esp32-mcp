@@ -32,7 +32,7 @@ const pool = new Pool({
     idleTimeoutMillis: 30000,
 });
 
-pool.on('connect', (client) => {
+pool.on('connect', (client: any) => {
     client.query(`SET search_path TO ${config.postgres.schema}, public`);
 });
 
@@ -114,7 +114,7 @@ export class ReportService {
 
             const result = await pool.query(sql, [embeddingStr, limit]);
 
-            return result.rows.map(row => ({
+            return result.rows.map((row: any) => ({
                 id: row.id,
                 title: row.title,
                 word_url: row.word_url,

@@ -32,10 +32,11 @@ Thumbs.db
 *.swp
 *.swo
 
-# Temporary
+# Temporary files and downloads
 .temp/
 tmp/
 coverage/
+backend/downloads/
 
 # Backend Scripts
 backend/src/scripts/check_instances.ts

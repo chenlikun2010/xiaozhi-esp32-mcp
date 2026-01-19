@@ -31,6 +31,10 @@ sudo apt install -y nodejs
 sudo apt install mysql-server -y
 
 # 安装 PM2 (用于进程管理)
+# 安装 PostgreSQL (用于向量数据库)
+sudo apt install postgresql postgresql-contrib -y
+
+# 安装 PM2 (用于进程管理)
 sudo npm install -g pm2
 sudo npm install -g typescript ts-node
 ```
@@ -48,7 +52,7 @@ git clone https://github.com/kun20031029/mcpmanage.git  .
 
 ## 3. 部署数据库
 
-### 3.1 配置 MySQL 用户
+### 3.1 配置 MySQL 用户 (主业务库)
 
 ```bash
 sudo mysql
@@ -68,6 +72,31 @@ CREATE USER 'mcpadmin'@'%' IDENTIFIED BY 'Mcp@20260109';
 GRANT ALL PRIVILEGES ON mcplist.* TO 'mcpadmin'@'%';
 FLUSH PRIVILEGES;
 EXIT;
+```
+
+### 3.2 配置 PostgreSQL 用户 (向量数据库)
+
+如果是使用阿里云 RDS PostgreSQL，请跳过此步骤，直接在 `.env` 中配置连接信息。
+
+如果是本地安装 PostgreSQL：
+
+```bash
+# 登录 postgres 用户
+sudo -i -u postgres
+
+# 进入 psql
+psql
+
+# 创建数据库和用户
+CREATE DATABASE fcbaogao;
+CREATE USER fcadmin WITH ENCRYPTED PASSWORD 'Fcadmin@20260119001';
+GRANT ALL PRIVILEGES ON DATABASE fcbaogao TO fcadmin;
+
+# 启用 pgvector 扩展 (必须确保已安装 pgvector 插件)
+\c fcbaogao
+CREATE EXTENSION IF NOT EXISTS vector;
+\q
+exit
 ```
 
 ## 4. 部署后端 (Backend)
@@ -95,17 +124,42 @@ cp .env.example .env  # 如果没有 .env.example，直接创建 .env
 nano .env
 ```
 
-在 `.env` 中填入你的配置：
+在 `.env` 中填入配置（包含新增的 SiliconFlow 和 PostgreSQL 配置）：
 
 ```env
 PORT=3005
+
+# MySQL (业务数据)
 DB_HOST=8.140.51.220
 DB_PORT=3306
 DB_USER=mcpadmin
 DB_PASS=Mcp@20260109
 DB_NAME=mcplist
+
+# JWT & API Keys
 JWT_SECRET=xJW+2JHzgs+Dx8gk8/VWLSJINLVC56j8my/umYTmiOk=
 QWEN_API_KEY=sk-f65deeac876c48099bcb5e5889c82e01
+
+# SiliconFlow API (新增 - 用于向量 Embedding 和 LLM)
+SILICONFLOW_API_KEY=sk-rbtxqmcsdsbzrbwostosvkjojpbwtsxukxprvovvyaslcqgw
+SILICONFLOW_BASE_URL=https://api.siliconflow.cn/v1
+SILICONFLOW_MODEL=BAAI/bge-m3
+
+# PostgreSQL (新增 - 用于向量存储)
+# 如果是本地安装，Host 填写 localhost
+POSTGRES_HOST=pgm-2ze12x5jpbo57x5jco.pg.rds.aliyuncs.com
+POSTGRES_PORT=5432
+POSTGRES_USER=fcadmin
+POSTGRES_PASSWORD=Fcadmin@20260119001
+POSTGRES_DB=fcbaogao
+POSTGRES_SCHEMA=mcp
+
+# Report Worker 配置 (新增)
+REPORT_DOWNLOAD_DIR=./downloads/reports
+REPORT_POLL_INTERVAL_MS=60000
+REPORT_MAX_CONCURRENT=3
+REPORTS_API_URL=https://m.fckvip.cn//api/words/getWords?pageSize=100
+FETCH_REPORTS_CRON="0 7,22 * * *"
 ```
 
 ### 4.3 初始化数据
@@ -113,14 +167,27 @@ QWEN_API_KEY=sk-f65deeac876c48099bcb5e5889c82e01
 运行 Seed 脚本初始化数据：
 
 ```bash
+# 初始化 MySQL 基础数据
 npx ts-node src/seed.ts
-# 如果需要更新中文服务名称，确保运行过相关更新脚本
+
+# 初始化 PostgreSQL 向量数据库表结构 (新增)
+# 注意：你需要先手动在 PostgreSQL 数据库中执行 `src/scripts/init_report_db.sql` 中的 SQL 语句
+# 或者如果连接权限允许，使用 psql 命令行工具导入
+psql -h $POSTGRES_HOST -U $POSTGRES_USER -d $POSTGRES_DB -f src/scripts/init_report_db.sql
 ```
 
 ### 4.4 使用 PM2 启动服务
 
+现在需要启动两个进程：API Server 和 Report Worker。
+
 ```bash
+# 启动 API Server
 pm2 start dist/index.js --name "mcp-backend"
+
+# 启动 Report Worker (新增)
+# 注意：Worker 需要运行 TypeScript 文件或者编译后的 JS
+pm2 start src/workers/reportWorker.ts --interpreter ./node_modules/.bin/ts-node --name "mcp-report-worker"
+
 pm2 save
 pm2 startup
 ```
@@ -188,41 +255,39 @@ sudo systemctl restart nginx
 ## 7. 验证部署
 
 1.  访问 `http://wx.aixuexi.cc`。
-2.  你应该能看到登录页面。
-3.  尝试注册、登录、访问服务市场，确认一切正常。
+2.  登录系统。
+3.  在服务市场安装 "行业报告专家"。
+4.  测试对话："2026年世界经济展望"。
 
 ## 维护常用命令
 
-- **查看后端日志**: `pm2 logs mcp-backend`
-- **重启后端**: `pm2 restart mcp-backend`
+- **查看日志**: 
+  - Backend: `pm2 logs mcp-backend`
+  - Worker: `pm2 logs mcp-report-worker`
+- **重启服务**: 
+  - `pm2 restart mcp-backend`
+  - `pm2 restart mcp-report-worker`
 - **更新代码**:
   ```bash
   # 1. 拉取最新代码
   cd ~/app
   git pull
 
-  # 2. 更新后端 (安装新依赖 uuid, mysql2 等)
+  # 2. 更新后端
   cd backend
   npm install
   npm run build
 
-  # 3. 初始化新服务数据 (运行本次新增的 Seed 脚本)
-  # 注意：请确保 .env 配置文件正确
-  npx ts-node src/scripts/add_how_to_cook_service.ts
-  npx ts-node src/scripts/add_mbti_service.ts
-  npx ts-node src/scripts/add_stock_service.ts
-  npx ts-node src/scripts/add_exchange_service.ts
-  npx ts-node src/scripts/add_train_service.ts
-
-  # 【本次新增】创建初始管理员账号
-  npx ts-node src/scripts/create_admin.ts <admin_email> <password>
+  # 3. 初始化新服务数据
+  # 注册新的报告专家服务
+  npx ts-node src/scripts/add_report_expert_service.ts
   
-  # 4. 重启后端服务 (TypeORM 会自动同步数据库结构，添加 activation_code 表和 user.role 字段)
-  pm2 restart mcp-backend
+  # 4. 重启所有服务
+  pm2 restart all
 
-  # 5. 更新前端 (本次有重大更新：管理后台)
+  # 5. 更新前端
   cd ../frontend
   npm install
   npm run build
-  # 此时 Nginx 会自动服务新的 dist 文件，无需重启 Nginx
+  # Nginx 自动生效
   ```

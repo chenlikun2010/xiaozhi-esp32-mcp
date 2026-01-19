@@ -8,6 +8,8 @@ import { GetStockQuoteDefinition, GetStockHistoryDefinition, handleGetStockQuote
 import { GetExchangeRateDefinition, ConvertCurrencyDefinition, handleGetExchangeRate, handleConvertCurrency } from "./tools/ExchangeRateTool";
 import { SearchTrainTicketsDefinition, handleSearchTrainTickets } from "./tools/TrainTicketTool";
 import { GetGoldPriceDefinition, handleGetGoldPrice } from "./tools/GoldPriceTool";
+import { SearchReportsDefinition, handleSearchReports } from "./tools/ReportSearchTool";
+import { ReportExpertDefinition, handleReportExpert } from "./tools/ReportExpertTool";
 
 export class XiaozhiMCPServer {
     private server: McpServer;
@@ -76,6 +78,8 @@ export class XiaozhiMCPServer {
             this.registerTrainTools();
         } else if (this.serviceName.includes("黄金") || this.serviceName.includes("Gold")) {
             this.registerGoldTools();
+        } else if (this.serviceName.includes("报告") || this.serviceName.includes("Report")) {
+            this.registerReportTool();
         } else {
             console.warn(`Unknown service name: ${this.serviceName}. Only base tools registered.`);
         }
@@ -167,6 +171,19 @@ export class XiaozhiMCPServer {
             SearchTrainTicketsDefinition.name,
             SearchTrainTicketsDefinition.schema,
             async (args) => this.wrapHandler(handleSearchTrainTickets, args, SearchTrainTicketsDefinition.name)
+        );
+    }
+
+    private registerReportTool() {
+        this.server.tool(
+            SearchReportsDefinition.name,
+            SearchReportsDefinition.schema,
+            async (args) => this.wrapHandler(handleSearchReports, args, SearchReportsDefinition.name)
+        );
+        this.server.tool(
+            ReportExpertDefinition.name,
+            ReportExpertDefinition.schema,
+            async (args) => this.wrapHandler(handleReportExpert, args, ReportExpertDefinition.name)
         );
     }
 

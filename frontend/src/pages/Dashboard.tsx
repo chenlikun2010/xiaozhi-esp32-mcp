@@ -49,7 +49,8 @@ export default function Dashboard() {
             setInstances(res.data);
             setLoading(false);
         } catch (error) {
-            console.error(error);
+            console.error("Failed to fetch instances:", error);
+            setLoading(false);
         }
     };
 
@@ -155,7 +156,12 @@ export default function Dashboard() {
 
             {/* Instance Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {instances.map(instance => (
+                {loading && (
+                    <div className="col-span-full flex justify-center items-center p-12 h-64">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                    </div>
+                )}
+                {!loading && instances.map(instance => (
                     <Card key={instance.id} className="flex flex-col overflow-hidden border-2 hover:border-primary/50 transition-colors">
                         <div className="p-6 flex-1">
                             <div className="flex justify-between items-start mb-4">

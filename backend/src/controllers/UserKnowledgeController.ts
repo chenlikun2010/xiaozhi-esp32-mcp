@@ -1,14 +1,29 @@
 import { Request, Response } from 'express';
-import multer = require('multer');
 import * as path from 'path';
 import * as fs from 'fs';
 import { UserKnowledgeService } from '../services/UserKnowledgeService';
+
+// 使用 CommonJS 引入以避免 TS 类型问题
+const multer = require('multer');
+
+// 定义 Multer 文件接口
+interface MulterFile {
+    fieldname: string;
+    originalname: string;
+    encoding: string;
+    mimetype: string;
+    size: number;
+    destination: string;
+    filename: string;
+    path: string;
+    buffer: Buffer;
+}
 
 // ============================================================
 // Multer 配置 - 使用内存存储，之后在 handler 中保存
 // ============================================================
 
-const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (req: Request, file: MulterFile, cb: any) => {
     const allowedTypes = ['pdf', 'docx', 'doc', 'pptx', 'ppt', 'xlsx', 'xls', 'txt', 'md'];
     const ext = path.extname(file.originalname).slice(1).toLowerCase();
 

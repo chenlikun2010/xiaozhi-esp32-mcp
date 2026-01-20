@@ -259,6 +259,38 @@ sudo systemctl restart nginx
 3.  在服务市场安装 "行业报告专家"。
 4.  测试对话："2026年世界经济展望"。
 
+## 8. 故障排查
+
+### 8.1 登录返回 502 Bad Gateway
+
+如果访问登录接口返回 502，说明 Nginx 无法连接到后端服务。原因通常是后端服务未启动或已崩溃。
+
+**排查步骤**：
+
+1.  **检查 PM2 状态**：
+    ```bash
+    pm2 status
+    ```
+    如果 `mcp-backend` 的状态是 `errored` 或 `stopped`，或者 `restart` 次数一直在增加，说明服务启动失败。
+
+2.  **查看错误日志**：
+    ```bash
+    pm2 logs mcp-backend --lines 50
+    ```
+    *   如果看到 `Cannot find module 'multer'`：说明构建不完整，请重新运行 `npm run build`。
+    *   如果看到 `Error: connect ETIMEDOUT`：说明数据库连接失败，请检查 `.env` 中的数据库配置。
+    *   如果看到 `EADDRINUSE`：说明端口被占用。
+
+3.  **强制重装与重启**：
+    如果以上都不行，尝试究极修复：
+    ```bash
+    cd ~/app/backend
+    rm -rf node_modules dist  # 清理旧文件
+    npm install               # 重新安装依赖
+    npm run build             # 重新构建 (这一步必须成功)
+    pm2 restart mcp-backend   # 重启服务
+    ```
+
 ## 维护常用命令
 
 - **查看日志**: 

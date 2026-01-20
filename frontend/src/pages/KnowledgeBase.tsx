@@ -12,14 +12,25 @@ interface KnowledgeFile {
     created_at: string;
 }
 
+interface KnowledgeConfig {
+    enabled: boolean;
+    mcpEndpoint: string;
+    mcpToken: string;
+    fileCount: number;
+    hasFiles: boolean;
+}
+
 const API_BASE = '/api';
 
 export default function KnowledgeBase() {
     const [files, setFiles] = useState<KnowledgeFile[]>([]);
+    const [config, setConfig] = useState<KnowledgeConfig | null>(null);
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
     const [dragActive, setDragActive] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [copied, setCopied] = useState(false);
+    const [toggling, setToggling] = useState(false);
 
     // 获取文件列表
     const fetchFiles = useCallback(async () => {
@@ -43,10 +54,62 @@ export default function KnowledgeBase() {
         }
     }, []);
 
+    // 获取配置信息
+    const fetchConfig = useCallback(async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_BASE}/kb/config`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+            const data = await response.json();
+            if (data.success) {
+                setConfig(data.data);
+            }
+        } catch (err: any) {
+            console.error('Failed to fetch config:', err);
+        }
+    }, []);
+
+    // 切换知识库开关
+    const toggleConfig = async (enabled: boolean) => {
+        setToggling(true);
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_BASE}/kb/toggle`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ enabled }),
+            });
+            const data = await response.json();
+            if (data.success) {
+                setConfig(prev => prev ? { ...prev, enabled } : null);
+            } else {
+                setError(data.error || 'Failed to toggle');
+            }
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setToggling(false);
+        }
+    };
+
+    // 复制到剪贴板
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
     // 初始加载
     useEffect(() => {
         fetchFiles();
-    }, [fetchFiles]);
+        fetchConfig();
+    }, [fetchFiles, fetchConfig]);
 
     // 轮询处理中的文件状态
     useEffect(() => {
@@ -204,6 +267,61 @@ export default function KnowledgeBase() {
                             >
                                 关闭
                             </button>
+                        </div>
+                    )}
+
+                    {/* MCP 接入配置 */}
+                    {config && (
+                        <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xl">🔌</span>
+                                    <h3 className="text-lg font-medium text-gray-800">MCP 接入设置</h3>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-sm text-gray-600">
+                                        {config.enabled ? '已启用' : '已禁用'}
+                                    </span>
+                                    <button
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${config.enabled ? 'bg-blue-600' : 'bg-gray-300'
+                                            } ${toggling ? 'opacity-50' : ''}`}
+                                        onClick={() => toggleConfig(!config.enabled)}
+                                        disabled={toggling}
+                                    >
+                                        <span
+                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${config.enabled ? 'translate-x-6' : 'translate-x-1'
+                                                }`}
+                                        />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {config.enabled && (
+                                <div className="space-y-3">
+                                    <div>
+                                        <label className="text-sm text-gray-600 block mb-1">MCP 接入地址</label>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="text"
+                                                readOnly
+                                                value={config.mcpEndpoint}
+                                                className="flex-1 px-3 py-2 text-sm bg-white border rounded-lg text-gray-700"
+                                            />
+                                            <button
+                                                className={`px-3 py-2 text-sm rounded-lg transition-colors ${copied ? 'bg-green-500 text-white' : 'bg-blue-500 text-white hover:bg-blue-600'
+                                                    }`}
+                                                onClick={() => copyToClipboard(config.mcpEndpoint)}
+                                            >
+                                                {copied ? '✓ 已复制' : '复制'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <p className="text-xs text-gray-500">
+                                        将此地址配置到小智等 MCP 客户端，即可通过对话检索您的个人知识库。
+                                        当前知识库共有 <strong>{config.fileCount}</strong> 个文件。
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     )}
 

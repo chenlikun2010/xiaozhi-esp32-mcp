@@ -66,6 +66,13 @@ app.get('/knowledge/files/:id/status', authMiddleware, UserKnowledgeController.g
 app.delete('/knowledge/files/:id', authMiddleware, UserKnowledgeController.deleteFile);
 app.post('/knowledge/search', authMiddleware, UserKnowledgeController.search);
 
+// Knowledge Base Config Routes (MCP 接入配置)
+import { KnowledgeConfigController } from './controllers/KnowledgeConfigController';
+
+app.get('/kb/config', authMiddleware, KnowledgeConfigController.getConfig);
+app.post('/kb/toggle', authMiddleware, KnowledgeConfigController.toggleEnabled);
+app.post('/kb/verify-token', KnowledgeConfigController.verifyToken); // 无需 auth，使用 MCP Token 验证
+
 app.get('/', (req, res) => {
     res.send('Xiaozhi MCP Manager Backend');
 });

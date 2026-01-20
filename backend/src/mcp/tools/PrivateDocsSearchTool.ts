@@ -132,6 +132,22 @@ export async function handlePrivateDocsSearch(args: any, userId: number) {
     try {
         console.log(`[PrivateDocs] User ${userId} searching: "${query}"`);
 
+        // 先检查用户是否有已完成的文件
+        const fileCheckResult = await pool.query(
+            `SELECT COUNT(*) as count FROM user_knowledge_files WHERE user_id = $1 AND status = 'completed'`,
+            [userId]
+        );
+        const fileCount = parseInt(fileCheckResult.rows[0]?.count || '0');
+
+        if (fileCount === 0) {
+            return {
+                content: [{
+                    type: "text",
+                    text: "您的知识库目前是空的，请先前往小慧机器人平台上传文档。上传后，系统会自动解析您的文档内容，届时您就可以通过对话来检索您的个人知识了。"
+                }]
+            };
+        }
+
         // 执行向量检索
         const results = await searchUserKnowledge(userId, query, 5);
 

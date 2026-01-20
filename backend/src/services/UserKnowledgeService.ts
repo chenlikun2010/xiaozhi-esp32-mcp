@@ -174,11 +174,16 @@ async function parseFile(filePath: string, fileType: string): Promise<string> {
 
 function chunkText(text: string, chunkSize: number, overlap: number): string[] {
     const chunks: string[] = [];
-    let start = 0;
 
-    // 清理文本
+    // 清理文本: 合并空白字符，但保留基本的可读性
     text = text.replace(/\s+/g, ' ').trim();
 
+    // 如果清理后文本过短，直接返回空
+    if (text.length < 10) {
+        return [];
+    }
+
+    let start = 0;
     while (start < text.length) {
         let end = start + chunkSize;
 
@@ -190,19 +195,23 @@ function chunkText(text: string, chunkSize: number, overlap: number): string[] {
             const lastDot = text.lastIndexOf('. ', end);
 
             const breakPoint = Math.max(lastPeriod, lastQuestion, lastExclaim, lastDot);
-            if (breakPoint > start + chunkSize / 2) {
+            // 只有当断点在当前切片的后半部分时才采用，避免切片太短
+            if (breakPoint > start + chunkSize * 0.5) {
                 end = breakPoint + 1;
             }
         }
 
-        chunks.push(text.slice(start, end).trim());
-        start = end - overlap;
+        const chunk = text.slice(start, end).trim();
+        if (chunk.length > 5) { // 放宽最小长度限制
+            chunks.push(chunk);
+        }
 
+        start = end - overlap;
         if (start < 0) start = 0;
         if (start >= text.length) break;
     }
 
-    return chunks.filter(chunk => chunk.length > 10);
+    return chunks;
 }
 
 // ============================================================
@@ -335,13 +344,14 @@ export class UserKnowledgeService {
             const text = await parseFile(filePath, fileType);
             console.log(`[KnowledgeService] Extracted ${text.length} characters`);
 
-            if (text.length < 10) {
-                throw new Error('File content is too short or empty');
-            }
-
             // 2. 文本分片
             const chunks = chunkText(text, config.chunkSize, config.chunkOverlap);
             console.log(`[KnowledgeService] Split into ${chunks.length} chunks`);
+
+            if (chunks.length === 0) {
+                const snippet = text.length > 50 ? text.substring(0, 50) + '...' : text;
+                throw new Error(`无法提取有效文本 (Length: ${text.length}). 这可能是扫描版PDF(图片)或加密文档. 内容预览: "${snippet}"`);
+            }
 
             // 3. 生成 embeddings
             console.log(`[KnowledgeService] Generating embeddings...`);

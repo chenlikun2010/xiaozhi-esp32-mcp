@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Settings from './pages/Settings';
 import ForgotPassword from './pages/ForgotPassword';
 import Marketplace from './pages/Marketplace';
+import KnowledgeBase from './pages/KnowledgeBase';
 import { AdminLayout } from './layouts/AdminLayout';
 import UserManagement from './pages/admin/UserManagement';
 import CodeManagement from './pages/admin/CodeManagement';
@@ -36,6 +37,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/marketplace" element={<Marketplace />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/knowledge" element={<KnowledgeBase />} />
 
         {/* Admin Routes */}
         <Route path="/admin" element={<AdminLayout />}>

@@ -50,9 +50,16 @@ app.put('/admin/users/:id', authMiddleware, adminMiddleware, AdminController.upd
 app.get('/admin/codes', authMiddleware, adminMiddleware, CodeController.listCodes);
 app.post('/admin/codes/generate', authMiddleware, adminMiddleware, CodeController.generateCodes);
 
-// Knowledge Base Routes
+// Knowledge Base Routes (小慧机器人知识库管理)
 import { UserKnowledgeController, upload } from './controllers/UserKnowledgeController';
 
+app.post('/kb/upload', authMiddleware, upload.single('file'), UserKnowledgeController.uploadFile);
+app.get('/kb/list', authMiddleware, UserKnowledgeController.getFiles);
+app.get('/kb/file/:id/status', authMiddleware, UserKnowledgeController.getFileStatus);
+app.delete('/kb/file/:id', authMiddleware, UserKnowledgeController.deleteFile);
+app.post('/kb/search', authMiddleware, UserKnowledgeController.search);
+
+// Legacy routes (backward compatibility)
 app.post('/knowledge/upload', authMiddleware, upload.single('file'), UserKnowledgeController.uploadFile);
 app.get('/knowledge/files', authMiddleware, UserKnowledgeController.getFiles);
 app.get('/knowledge/files/:id/status', authMiddleware, UserKnowledgeController.getFileStatus);

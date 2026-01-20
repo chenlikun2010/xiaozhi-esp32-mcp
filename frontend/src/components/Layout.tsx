@@ -12,6 +12,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     const navItems = [
         { label: '仪表盘', path: '/dashboard' },
         { label: '服务市场', path: '/marketplace' },
+        { label: '知识库', path: '/knowledge' },
         { label: '设置', path: '/settings' },
     ];
 

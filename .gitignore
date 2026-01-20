@@ -47,3 +47,11 @@ backend/src/scripts/list_services.ts
 backend/src/scripts/test_stock_start.ts
 backend/src/scripts/test_yahoo.ts
 backend/src/scripts/verify_stock_wrapper.ts
+
+# Test files (temporary)
+backend/src/scripts/test_*.ts
+backend/src/scripts/test_*.png
+backend/src/scripts/*.png
+
+# User uploaded files
+backend/uploads/user_kb/

@@ -325,3 +325,45 @@ sudo systemctl restart nginx
   npm run build
   # Nginx 自动生效
   ```
+
+---
+
+## 升级记录
+
+### 2026-01-20: 修复 PDF 上传 OCR 功能
+
+**问题描述**: PDF 上传后显示 "OCR识别中"，然后失败，错误信息: `Image or Canvas expected`
+
+**根本原因**:
+1. `pdf-img-convert` 库与 `officeparser` 的 pdfjs-dist 版本冲突导致 canvas 对象不兼容
+2. OCR 模型名称 `deepseek-ai/deepseek-vl2-tiny` 在 SiliconFlow 平台不存在
+
+**修复内容**:
+- 新增依赖 `pdf-to-img` 替代 `pdf-img-convert` 进行 PDF 转图片
+- 更正 OCR 模型为 `deepseek-ai/DeepSeek-OCR`
+
+**升级步骤**:
+```bash
+# 1. 进入项目目录并拉取最新代码
+cd ~/app
+git pull
+
+# 2. 进入后端目录，安装新依赖
+cd backend
+npm install          # 会安装新增的 pdf-to-img 依赖
+npm run build
+
+# 3. 重启后端服务
+pm2 restart mcp-backend
+
+# 4. 验证: 
+#    - 登录系统上传一个扫描版 PDF 文件
+#    - 观察状态从 "parsing" -> "OCR识别中" -> "completed"
+#    - 使用 pm2 logs mcp-backend 查看日志确认成功
+```
+
+**变更文件**:
+- `backend/src/utils/pdf_to_image.ts` - 使用 pdf-to-img 替代 pdf-img-convert
+- `backend/src/utils/deepseek_ocr.ts` - 更正 OCR 模型名称
+- `backend/package.json` - 新增 pdf-to-img 依赖
+

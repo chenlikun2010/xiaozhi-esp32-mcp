@@ -105,7 +105,7 @@ export class UserKnowledgeController {
                 message: 'File uploaded and processing started',
                 data: {
                     id: fileId,
-                    fileName: file.originalname,
+                    fileName: originalName, // Use decoded name
                     fileType,
                     fileSize: file.size,
                     status: 'parsing'

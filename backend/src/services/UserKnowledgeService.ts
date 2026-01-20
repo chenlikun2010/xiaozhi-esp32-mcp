@@ -4,6 +4,8 @@ import * as path from 'path';
 import axios from 'axios';
 import mammoth from 'mammoth';
 import officeParser from 'officeparser';
+import { convertPdfToImages } from '../utils/pdf_to_image';
+import { recognizePage } from '../utils/deepseek_ocr';
 
 // pdf-parse v1.1.1 - 简单函数调用
 const pdfParse = require('pdf-parse');
@@ -69,7 +71,7 @@ export interface KnowledgeFile {
     file_name: string;
     file_type: string;
     file_size: number;
-    status: 'pending' | 'parsing' | 'completed' | 'failed';
+    status: 'pending' | 'parsing' | 'completed' | 'failed' | 'OCR识别中';
     chunk_count: number;
     error_message?: string;
     created_at: Date;
@@ -341,8 +343,46 @@ export class UserKnowledgeService {
         try {
             // 1. 解析文件
             console.log(`[KnowledgeService] Parsing ${fileType} file...`);
-            const text = await parseFile(filePath, fileType);
-            console.log(`[KnowledgeService] Extracted ${text.length} characters`);
+            let text = await parseFile(filePath, fileType);
+            const rawLength = text.replace(/\s+/g, '').length;
+            console.log(`[KnowledgeService] Extracted ${text.length} characters (valid: ${rawLength})`);
+
+            // 降级策略: OCR 处理 (Fallback: OCR Processing)
+            if (fileType === 'pdf' && rawLength < 100) {
+                console.log('[KnowledgeService] Valid text < 100 chars. Switching to DeepSeek-OCR...');
+                await UserKnowledgeService.updateFileStatus(fileId, 'OCR识别中' as any);
+
+                try {
+                    const pdfBuffer = fs.readFileSync(filePath);
+                    // 转换为图片 (150 DPI)
+                    const imageBuffers = await convertPdfToImages(pdfBuffer, 150);
+                    console.log(`[KnowledgeService] PDF converted to ${imageBuffers.length} images for OCR.`);
+
+                    let ocrText = '';
+                    for (let i = 0; i < imageBuffers.length; i++) {
+                        try {
+                            console.log(`[KnowledgeService] OCR processing page ${i + 1}/${imageBuffers.length}...`);
+                            const pageBase64 = imageBuffers[i].toString('base64');
+                            const pageText = await recognizePage(pageBase64);
+                            ocrText += pageText + '\n\n';
+                        } catch (err: any) {
+                            console.error(`[KnowledgeService] OCR failed for page ${i + 1}: ${err.message}`);
+                            // 继续处理下一页
+                        }
+                    }
+
+                    if (ocrText.trim().length > 0) {
+                        text = ocrText;
+                        console.log(`[KnowledgeService] OCR completed. Extracted ${text.length} characters.`);
+                    } else {
+                        throw new Error('OCR failed to extract any text from the document.');
+                    }
+
+                } catch (ocrErr: any) {
+                    console.error('[KnowledgeService] OCR Critical Failure:', ocrErr);
+                    throw new Error(`OCR Processing Failed: ${ocrErr.message}`);
+                }
+            }
 
             // 2. 文本分片
             const chunks = chunkText(text, config.chunkSize, config.chunkOverlap);

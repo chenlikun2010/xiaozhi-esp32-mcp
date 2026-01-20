@@ -2,25 +2,62 @@ import { Pool } from 'pg';
 import * as fs from 'fs';
 import * as path from 'path';
 import axios from 'axios';
-import PDFParse from 'pdf-parse';
 import mammoth from 'mammoth';
 import officeParser from 'officeparser';
 
-// PostgreSQL 连接配置
-const pool = new Pool({
-    host: process.env.POSTGRES_HOST!,
-    port: parseInt(process.env.POSTGRES_PORT || '5432'),
-    user: process.env.POSTGRES_USER!,
-    password: process.env.POSTGRES_PASSWORD!,
-    database: process.env.POSTGRES_DB!,
-    max: 10,
-    idleTimeoutMillis: 30000,
-});
+// pdf-parse v1.1.1 - 简单函数调用
+const pdfParse = require('pdf-parse');
 
-pool.on('connect', (client: any) => {
-    const schema = process.env.POSTGRES_SCHEMA || 'mcp';
-    client.query(`SET search_path TO ${schema}, public`);
-});
+// PostgreSQL 连接配置 - 懒加载
+let pool: Pool | null = null;
+let poolInitialized = false;
+let poolError: Error | null = null;
+
+function getPool(): Pool {
+    if (poolError) {
+        throw poolError;
+    }
+    if (!pool) {
+        pool = new Pool({
+            host: process.env.POSTGRES_HOST!,
+            port: parseInt(process.env.POSTGRES_PORT || '5432'),
+            user: process.env.POSTGRES_USER!,
+            password: process.env.POSTGRES_PASSWORD!,
+            database: process.env.POSTGRES_DB!,
+            max: 10,
+            idleTimeoutMillis: 30000,
+            connectionTimeoutMillis: 5000, // 5 秒连接超时
+        });
+
+        pool.on('connect', (client: any) => {
+            const schema = process.env.POSTGRES_SCHEMA || 'mcp';
+            client.query(`SET search_path TO ${schema}, public`);
+        });
+
+        pool.on('error', (err: Error) => {
+            console.error('[PostgreSQL] Pool error:', err.message);
+        });
+    }
+    return pool;
+}
+
+// 测试连接
+async function testConnection(): Promise<boolean> {
+    if (poolInitialized) return !poolError;
+
+    try {
+        const p = getPool();
+        await p.query('SELECT 1');
+        poolInitialized = true;
+        console.log('[PostgreSQL] Connection successful');
+        return true;
+    } catch (err: any) {
+        poolInitialized = true;
+        poolError = err;
+        console.error('[PostgreSQL] Connection failed:', err.message);
+        return false;
+    }
+}
 
 // ============================================================
 // 类型定义
@@ -50,7 +87,7 @@ export interface SearchResult {
 // ============================================================
 
 const config = {
-    uploadDir: process.env.USER_KB_UPLOAD_DIR || '/data/user_kb',
+    uploadDir: process.env.USER_KB_UPLOAD_DIR || path.join(__dirname, '../../uploads/user_kb'),
     chunkSize: 600,       // 每个分片的最大字符数
     chunkOverlap: 100,    // 分片之间的重叠字符数
     siliconflow: {
@@ -69,7 +106,7 @@ const config = {
  */
 async function parsePdf(filePath: string): Promise<string> {
     const dataBuffer = fs.readFileSync(filePath);
-    const result = await PDFParse(Buffer.from(dataBuffer));
+    const result = await pdfParse(dataBuffer);
     return result.text;
 }
 
@@ -211,7 +248,7 @@ export class UserKnowledgeService {
         fileType: string,
         fileSize: number
     ): Promise<number> {
-        const result = await pool.query(
+        const result = await getPool().query(
             `INSERT INTO user_knowledge_files (user_id, file_name, file_type, file_size, status)
              VALUES ($1, $2, $3, $4, 'parsing')
              RETURNING id`,
@@ -230,14 +267,14 @@ export class UserKnowledgeService {
         errorMessage?: string
     ): Promise<void> {
         if (chunkCount !== undefined) {
-            await pool.query(
+            await getPool().query(
                 `UPDATE user_knowledge_files 
                  SET status = $1, chunk_count = $2, error_message = $3, updated_at = CURRENT_TIMESTAMP
                  WHERE id = $4`,
                 [status, chunkCount, errorMessage || null, fileId]
             );
         } else {
-            await pool.query(
+            await getPool().query(
                 `UPDATE user_knowledge_files 
                  SET status = $1, error_message = $2, updated_at = CURRENT_TIMESTAMP
                  WHERE id = $3`,
@@ -255,7 +292,7 @@ export class UserKnowledgeService {
         chunks: string[],
         embeddings: number[][]
     ): Promise<void> {
-        const client = await pool.connect();
+        const client = await getPool().connect();
         try {
             await client.query('BEGIN');
 
@@ -338,7 +375,7 @@ export class UserKnowledgeService {
      * 获取用户的文件列表
      */
     static async getUserFiles(userId: number): Promise<KnowledgeFile[]> {
-        const result = await pool.query(
+        const result = await getPool().query(
             `SELECT * FROM user_knowledge_files 
              WHERE user_id = $1 
              ORDER BY created_at DESC`,
@@ -351,7 +388,7 @@ export class UserKnowledgeService {
      * 删除用户的文件
      */
     static async deleteFile(fileId: number, userId: number): Promise<boolean> {
-        const result = await pool.query(
+        const result = await getPool().query(
             `DELETE FROM user_knowledge_files 
              WHERE id = $1 AND user_id = $2
              RETURNING id`,
@@ -368,7 +405,7 @@ export class UserKnowledgeService {
             const embedding = await getEmbedding(query);
             const embeddingStr = `[${embedding.join(',')}]`;
 
-            const result = await pool.query(
+            const result = await getPool().query(
                 `SELECT 
                     uke.file_id,
                     ukf.file_name,

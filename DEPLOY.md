@@ -158,7 +158,7 @@ POSTGRES_SCHEMA=mcp
 REPORT_DOWNLOAD_DIR=./downloads/reports
 REPORT_POLL_INTERVAL_MS=60000
 REPORT_MAX_CONCURRENT=3
-REPORTS_API_URL=https://m.fckvip.cn//api/words/getWords?pageSize=100
+REPORTS_API_URL=https://m.fckvip.cn//api/words/getWords?pageSize=30
 FETCH_REPORTS_CRON="0 7,22 * * *"
 ```
 
@@ -281,6 +281,8 @@ sudo systemctl restart nginx
   # 3. 初始化新服务数据
   # 注册新的报告专家服务
   npx ts-node src/scripts/add_report_expert_service.ts
+  # 注册个人知识库助手服务
+  npx ts-node src/scripts/add_knowledge_service.ts
   
   # 4. 重启所有服务
   pm2 restart all

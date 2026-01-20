@@ -5,24 +5,8 @@ import * as fs from 'fs';
 import { UserKnowledgeService } from '../services/UserKnowledgeService';
 
 // ============================================================
-// Multer 配置
+// Multer 配置 - 使用内存存储，之后在 handler 中保存
 // ============================================================
-
-const storage = multer.diskStorage({
-    destination: (req: any, file, cb) => {
-        const userId = req.user?.id || req.body?.userId;
-        if (!userId) {
-            return cb(new Error('User ID is required'), '');
-        }
-        const userDir = UserKnowledgeService.getUserUploadDir(userId);
-        cb(null, userDir);
-    },
-    filename: (req, file, cb) => {
-        // 使用时间戳 + 原始文件名避免冲突
-        const uniqueName = `${Date.now()}_${file.originalname}`;
-        cb(null, uniqueName);
-    }
-});
 
 const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
     const allowedTypes = ['pdf', 'docx', 'doc', 'pptx', 'ppt', 'xlsx', 'xls', 'txt', 'md'];
@@ -36,7 +20,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
 };
 
 export const upload = multer({
-    storage,
+    storage: multer.memoryStorage(),
     fileFilter,
     limits: {
         fileSize: 50 * 1024 * 1024, // 50MB 限制
@@ -55,7 +39,7 @@ export class UserKnowledgeController {
      */
     static async uploadFile(req: Request, res: Response) {
         try {
-            const userId = (req as any).user?.id;
+            const userId = (req as any).user?.userId;
             if (!userId) {
                 return res.status(401).json({ error: 'Unauthorized' });
             }
@@ -65,17 +49,26 @@ export class UserKnowledgeController {
                 return res.status(400).json({ error: 'No file uploaded' });
             }
 
-            const fileType = path.extname(file.originalname).slice(1).toLowerCase();
+            // 解决中文文件名乱码问题
+            const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+            const fileType = path.extname(originalName).slice(1).toLowerCase();
+
+            // 保存文件到用户目录
+            const userDir = UserKnowledgeService.getUserUploadDir(userId);
+            const uniqueName = `${Date.now()}_${originalName}`;
+            const filePath = path.join(userDir, uniqueName);
+            fs.writeFileSync(filePath, file.buffer);
 
             // 1. 创建文件记录 (状态: parsing)
             const fileId = await UserKnowledgeService.createFileRecord(
                 userId,
-                file.originalname,
+                originalName,
                 fileType,
                 file.size
             );
 
-            console.log(`[KnowledgeController] File uploaded: ${file.originalname} (ID: ${fileId})`);
+
+            console.log(`[KnowledgeController] File uploaded: ${originalName} (ID: ${fileId})`);
 
             // 2. 异步处理文件 (不阻塞响应)
             setImmediate(async () => {
@@ -83,7 +76,7 @@ export class UserKnowledgeController {
                     await UserKnowledgeService.processFile(
                         fileId,
                         userId,
-                        file.path,
+                        filePath,
                         fileType
                     );
                 } catch (error: any) {
@@ -106,6 +99,24 @@ export class UserKnowledgeController {
 
         } catch (error: any) {
             console.error('[KnowledgeController] Upload error:', error.message);
+
+            // Better error messages for common issues
+            if (error.message?.includes('ECONNREFUSED') ||
+                error.message?.includes('Connection terminated') ||
+                error.message?.includes('timeout') ||
+                error.message?.includes('getaddrinfo')) {
+                return res.status(503).json({
+                    error: '知识库数据库暂时不可用，请稍后重试',
+                    details: error.message
+                });
+            }
+            if (error.message?.includes('ENOENT')) {
+                return res.status(500).json({
+                    error: '文件存储目录不存在，请联系管理员',
+                    details: error.message
+                });
+            }
+
             return res.status(500).json({ error: error.message });
         }
     }
@@ -116,7 +127,7 @@ export class UserKnowledgeController {
      */
     static async getFiles(req: Request, res: Response) {
         try {
-            const userId = (req as any).user?.id;
+            const userId = (req as any).user?.userId;
             if (!userId) {
                 return res.status(401).json({ error: 'Unauthorized' });
             }
@@ -130,6 +141,20 @@ export class UserKnowledgeController {
 
         } catch (error: any) {
             console.error('[KnowledgeController] Get files error:', error.message);
+
+            // If PostgreSQL is unreachable, return empty list with warning instead of 500 error
+            if (error.message?.includes('ECONNREFUSED') ||
+                error.message?.includes('Connection terminated') ||
+                error.message?.includes('timeout') ||
+                error.message?.includes('getaddrinfo')) {
+                console.warn('[KnowledgeController] PostgreSQL unavailable, returning empty list');
+                return res.json({
+                    success: true,
+                    data: [],
+                    warning: '知识库服务暂时不可用，请稍后重试'
+                });
+            }
+
             return res.status(500).json({ error: error.message });
         }
     }
@@ -140,7 +165,7 @@ export class UserKnowledgeController {
      */
     static async deleteFile(req: Request, res: Response) {
         try {
-            const userId = (req as any).user?.id;
+            const userId = (req as any).user?.userId;
             if (!userId) {
                 return res.status(401).json({ error: 'Unauthorized' });
             }
@@ -173,7 +198,7 @@ export class UserKnowledgeController {
      */
     static async search(req: Request, res: Response) {
         try {
-            const userId = (req as any).user?.id;
+            const userId = (req as any).user?.userId;
             if (!userId) {
                 return res.status(401).json({ error: 'Unauthorized' });
             }
@@ -202,7 +227,7 @@ export class UserKnowledgeController {
      */
     static async getFileStatus(req: Request, res: Response) {
         try {
-            const userId = (req as any).user?.id;
+            const userId = (req as any).user?.userId;
             if (!userId) {
                 return res.status(401).json({ error: 'Unauthorized' });
             }

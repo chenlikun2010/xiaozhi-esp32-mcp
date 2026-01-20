@@ -9,6 +9,8 @@ import { recognizePage } from '../utils/deepseek_ocr';
 
 // pdf-parse v1.1.1 - 简单函数调用
 const pdfParse = require('pdf-parse');
+// xlsx - 用于解析 Excel 文件 (支持 xls 和 xlsx)
+const XLSX = require('xlsx');
 
 // PostgreSQL 连接配置 - 懒加载
 let pool: Pool | null = null;
@@ -121,7 +123,8 @@ async function parseDocx(filePath: string): Promise<string> {
 }
 
 /**
- * 解析 Office 文档 (PPT, Excel, etc.)
+ * 解析 Office 文档 (PPT only)
+ * 注意：xlsx/xls 使用专门的 parseExcel 函数
  */
 async function parseOffice(filePath: string): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -135,6 +138,25 @@ async function parseOffice(filePath: string): Promise<string> {
             }
         });
     });
+}
+
+/**
+ * 解析 Excel 文件 (xls/xlsx)
+ * 使用 xlsx 库，支持旧版 .xls 格式
+ */
+async function parseExcel(filePath: string): Promise<string> {
+    const workbook = XLSX.readFile(filePath);
+    let text = '';
+
+    // 遍历所有工作表
+    for (const sheetName of workbook.SheetNames) {
+        const sheet = workbook.Sheets[sheetName];
+        // 转换为 CSV 格式文本
+        const csv = XLSX.utils.sheet_to_csv(sheet);
+        text += `[${sheetName}]\n${csv}\n\n`;
+    }
+
+    return text;
 }
 
 /**
@@ -156,10 +178,11 @@ async function parseFile(filePath: string, fileType: string): Promise<string> {
         case 'docx':
         case 'doc':
             return parseDocx(filePath);
-        case 'pptx':
-        case 'ppt':
         case 'xlsx':
         case 'xls':
+            return parseExcel(filePath);
+        case 'pptx':
+        case 'ppt':
             return parseOffice(filePath);
         case 'txt':
         case 'md':

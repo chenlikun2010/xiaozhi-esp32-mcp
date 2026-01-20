@@ -10,6 +10,7 @@ import { SearchTrainTicketsDefinition, handleSearchTrainTickets } from "./tools/
 import { GetGoldPriceDefinition, handleGetGoldPrice } from "./tools/GoldPriceTool";
 import { SearchReportsDefinition, handleSearchReports } from "./tools/ReportSearchTool";
 import { ReportExpertDefinition, handleReportExpert } from "./tools/ReportExpertTool";
+import { PrivateDocsSearchDefinition, handlePrivateDocsSearch } from "./tools/PrivateDocsSearchTool";
 
 export class XiaozhiMCPServer {
     private server: McpServer;
@@ -17,14 +18,16 @@ export class XiaozhiMCPServer {
     private isConnected: boolean = false;
     private serviceName: string;
     private checkExpiry?: () => Promise<boolean>;
+    private userId?: number;
 
-    constructor(wssUrl: string, serviceName: string = "Xiaozhi MCP Service", checkExpiry?: () => Promise<boolean>) {
+    constructor(wssUrl: string, serviceName: string = "Xiaozhi MCP Service", checkExpiry?: () => Promise<boolean>, userId?: number) {
         this.server = new McpServer({
             name: serviceName,
             version: "1.0.0"
         });
         this.serviceName = serviceName;
         this.checkExpiry = checkExpiry;
+        this.userId = userId;
 
         this.transport = new WebSocketClientTransport(wssUrl);
 
@@ -80,6 +83,8 @@ export class XiaozhiMCPServer {
             this.registerGoldTools();
         } else if (this.serviceName.includes("报告") || this.serviceName.includes("Report")) {
             this.registerReportTool();
+        } else if (this.serviceName.includes("知识库") || this.serviceName.includes("Knowledge")) {
+            this.registerPrivateDocsTool();
         } else {
             console.warn(`Unknown service name: ${this.serviceName}. Only base tools registered.`);
         }
@@ -184,6 +189,26 @@ export class XiaozhiMCPServer {
             ReportExpertDefinition.name,
             ReportExpertDefinition.schema,
             async (args) => this.wrapHandler(handleReportExpert, args, ReportExpertDefinition.name)
+        );
+    }
+
+    private registerPrivateDocsTool() {
+        this.server.tool(
+            PrivateDocsSearchDefinition.name,
+            PrivateDocsSearchDefinition.schema,
+            async (args) => {
+                if (!this.userId) {
+                    return {
+                        content: [{ type: "text", text: "无法识别用户身份，请确保您已登录。" }],
+                        isError: true
+                    };
+                }
+                return this.wrapHandler(
+                    (a) => handlePrivateDocsSearch(a, this.userId!),
+                    args,
+                    PrivateDocsSearchDefinition.name
+                );
+            }
         );
     }
 

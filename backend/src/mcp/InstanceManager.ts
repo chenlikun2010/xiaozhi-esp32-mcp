@@ -45,7 +45,7 @@ class InstanceManager {
         };
 
         try {
-            const mcpServer = new XiaozhiMCPServer(wssUrl, serviceName, checkExpiry);
+            const mcpServer = new XiaozhiMCPServer(wssUrl, serviceName, checkExpiry, userId);
             await mcpServer.connect();
             this.activeInstances.set(dbId, mcpServer);
             return true;

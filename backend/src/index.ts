@@ -50,6 +50,15 @@ app.put('/admin/users/:id', authMiddleware, adminMiddleware, AdminController.upd
 app.get('/admin/codes', authMiddleware, adminMiddleware, CodeController.listCodes);
 app.post('/admin/codes/generate', authMiddleware, adminMiddleware, CodeController.generateCodes);
 
+// Knowledge Base Routes
+import { UserKnowledgeController, upload } from './controllers/UserKnowledgeController';
+
+app.post('/knowledge/upload', authMiddleware, upload.single('file'), UserKnowledgeController.uploadFile);
+app.get('/knowledge/files', authMiddleware, UserKnowledgeController.getFiles);
+app.get('/knowledge/files/:id/status', authMiddleware, UserKnowledgeController.getFileStatus);
+app.delete('/knowledge/files/:id', authMiddleware, UserKnowledgeController.deleteFile);
+app.post('/knowledge/search', authMiddleware, UserKnowledgeController.search);
+
 app.get('/', (req, res) => {
     res.send('Xiaozhi MCP Manager Backend');
 });

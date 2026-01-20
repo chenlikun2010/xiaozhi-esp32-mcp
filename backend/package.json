@@ -7,7 +7,8 @@
     "dev": "ts-node src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "worker:report": "ts-node src/workers/reportWorker.ts"
+    "worker:report": "ts-node src/workers/reportWorker.ts",
+    "worker:knowledge": "ts-node src/workers/knowledgeWorker.ts"
   },
   "keywords": [],
   "author": "",

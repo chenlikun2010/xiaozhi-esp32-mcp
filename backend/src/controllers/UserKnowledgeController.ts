@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import multer from 'multer';
+import multer = require('multer');
 import * as path from 'path';
 import * as fs from 'fs';
 import { UserKnowledgeService } from '../services/UserKnowledgeService';
@@ -44,7 +44,7 @@ export class UserKnowledgeController {
                 return res.status(401).json({ error: 'Unauthorized' });
             }
 
-            const file = req.file;
+            const file = (req as any).file;
             if (!file) {
                 return res.status(400).json({ error: 'No file uploaded' });
             }
@@ -170,7 +170,7 @@ export class UserKnowledgeController {
                 return res.status(401).json({ error: 'Unauthorized' });
             }
 
-            const fileId = parseInt(req.params.id);
+            const fileId = parseInt(req.params.id as string);
             if (isNaN(fileId)) {
                 return res.status(400).json({ error: 'Invalid file ID' });
             }
@@ -232,7 +232,7 @@ export class UserKnowledgeController {
                 return res.status(401).json({ error: 'Unauthorized' });
             }
 
-            const fileId = parseInt(req.params.id);
+            const fileId = parseInt(req.params.id as string);
             if (isNaN(fileId)) {
                 return res.status(400).json({ error: 'Invalid file ID' });
             }

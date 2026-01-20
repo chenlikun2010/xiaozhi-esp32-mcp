@@ -362,8 +362,13 @@ export class UserKnowledgeService {
             await this.updateFileStatus(fileId, 'completed', chunks.length);
             console.log(`[KnowledgeService] ✅ File ${fileId} processed successfully`);
 
-            // 6. 删除本地文件以节省空间 (可选)
-            // fs.unlinkSync(filePath);
+            // 6. 删除本地文件以节省空间
+            try {
+                fs.unlinkSync(filePath);
+                console.log(`[KnowledgeService] Deleted temp file: ${filePath}`);
+            } catch (err) {
+                console.warn(`[KnowledgeService] Failed to delete temp file: ${filePath}`);
+            }
 
         } catch (error: any) {
             console.error(`[KnowledgeService] ❌ Error processing file ${fileId}:`, error.message);

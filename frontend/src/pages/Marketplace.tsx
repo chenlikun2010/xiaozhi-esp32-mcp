@@ -88,7 +88,7 @@ export default function Marketplace() {
                                         className="font-mono text-sm"
                                     />
                                     <p className="text-xs text-muted-foreground mt-1">
-                                        这是小智平台为该智能体提供的 WebSocket 连接地址。
+                                        这是机器人平台为该智能体提供的 WebSocket 连接地址。
                                     </p>
                                 </div>
                                 <div className="flex justify-end gap-2 pt-4">

@@ -24,7 +24,7 @@ interface MulterFile {
 // ============================================================
 
 const fileFilter = (req: Request, file: MulterFile, cb: any) => {
-    const allowedTypes = ['pdf', 'docx', 'doc', 'pptx', 'ppt', 'xlsx', 'xls', 'txt', 'md'];
+    const allowedTypes = ['pdf', 'docx', 'doc', 'pptx', 'ppt', 'xlsx', 'xls', 'txt', 'md', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
     const ext = path.extname(file.originalname).slice(1).toLowerCase();
 
     if (allowedTypes.includes(ext)) {

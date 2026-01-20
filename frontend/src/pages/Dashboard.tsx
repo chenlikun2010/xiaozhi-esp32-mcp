@@ -139,7 +139,12 @@ export default function Dashboard() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4">
                 <div>
                     <h2 className="text-2xl md:text-3xl font-bold">仪表盘</h2>
-                    <p className="text-muted-foreground">欢迎回来, {user.email}</p>
+                    <p className="text-muted-foreground">
+                        欢迎回来, {user.email}
+                        <span className="ml-2 text-sm bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                            有效期至: {expireDate ? expireDate.toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                        </span>
+                    </p>
                 </div>
                 <div className="w-full md:w-auto flex flex-col md:flex-row gap-4">
                     <Card className="p-3 md:p-4 bg-primary text-primary-foreground md:w-auto">

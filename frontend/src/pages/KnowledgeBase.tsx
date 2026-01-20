@@ -220,11 +220,11 @@ export default function KnowledgeBase() {
                                 <h3 className="text-lg font-medium text-gray-800">如何使用知识库</h3>
                             </div>
                             <div className="space-y-2 text-sm text-gray-700">
-                                <p><strong>步骤 1：</strong>在此页面上传您的文档（PDF、Word、Excel、PPT、TXT 等）</p>
+                                <p><strong>步骤 1：</strong>在此页面上传您的文档（PDF、Word、Excel、PPT、TXT、图片 等）</p>
                                 <p><strong>步骤 2：</strong>等待文档处理完成（状态变为"已完成"）</p>
                                 <p><strong>步骤 3：</strong>前往 <a href="/marketplace" className="text-blue-600 underline hover:text-blue-800">服务市场</a>，添加"个人知识库助手"服务</p>
-                                <p><strong>步骤 4：</strong>粘贴您的小智 WebSocket 地址，点击启动</p>
-                                <p><strong>步骤 5：</strong>在小智中对话，即可智能检索您上传的文档内容！</p>
+                                <p><strong>步骤 4：</strong>粘贴您的机器人 WebSocket 地址，点击启动</p>
+                                <p><strong>步骤 5：</strong>在机器人中对话，即可智能检索您上传的文档内容！</p>
                             </div>
                             <p className="mt-3 text-xs text-gray-500">
                                 当前知识库共有 <strong>{files.filter(f => f.status === 'completed').length}</strong> 个已完成处理的文件。
@@ -246,7 +246,7 @@ export default function KnowledgeBase() {
                                 id="file-input"
                                 type="file"
                                 className="hidden"
-                                accept=".pdf,.doc,.docx,.txt,.md,.pptx,.ppt,.xlsx,.xls"
+                                accept=".pdf,.doc,.docx,.txt,.md,.pptx,.ppt,.xlsx,.xls,.jpg,.jpeg,.png,.gif,.bmp,.webp"
                                 onChange={handleFileInput}
                                 disabled={uploading}
                             />
@@ -255,7 +255,7 @@ export default function KnowledgeBase() {
                                 {uploading ? '上传中...' : '拖拽文件到这里，或点击选择文件'}
                             </div>
                             <div className="text-sm text-gray-500 mt-1">
-                                支持 PDF, Word, PowerPoint, Excel, TXT, Markdown
+                                支持 PDF, Word, PowerPoint, Excel, TXT, Markdown, 图片
                             </div>
                         </div>
 
@@ -288,7 +288,8 @@ export default function KnowledgeBase() {
                                                             {file.file_type === 'pdf' ? '📕' :
                                                                 file.file_type === 'docx' || file.file_type === 'doc' ? '📘' :
                                                                     file.file_type === 'pptx' || file.file_type === 'ppt' ? '📙' :
-                                                                        file.file_type === 'xlsx' || file.file_type === 'xls' ? '📗' : '📄'}
+                                                                        file.file_type === 'xlsx' || file.file_type === 'xls' ? '📗' :
+                                                                            ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(file.file_type) ? '🖼️' : '📄'}
                                                         </span>
                                                         <span className="text-sm font-medium truncate max-w-xs" title={file.file_name}>
                                                             {file.file_name}

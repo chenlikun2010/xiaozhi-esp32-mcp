@@ -188,8 +188,32 @@ async function parseFile(filePath: string, fileType: string): Promise<string> {
         case 'md':
         case 'json':
             return parseTxt(filePath);
+        case 'jpg':
+        case 'jpeg':
+        case 'png':
+        case 'gif':
+        case 'bmp':
+        case 'webp':
+            return parseImage(filePath);
         default:
             throw new Error(`Unsupported file type: ${ext}`);
+    }
+}
+
+/**
+ * 解析图片文件
+ * 使用 DeepSeek-OCR 进行识别
+ */
+async function parseImage(filePath: string): Promise<string> {
+    console.log(`[KnowledgeService] Processing image: ${filePath}`);
+    try {
+        const imageBuffer = fs.readFileSync(filePath);
+        const base64Image = imageBuffer.toString('base64');
+        const text = await recognizePage(base64Image);
+        return text;
+    } catch (error: any) {
+        console.error(`[KnowledgeService] OCR failed for image: ${error.message}`);
+        throw error;
     }
 }
 

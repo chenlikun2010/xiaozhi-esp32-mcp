@@ -28,6 +28,7 @@ app.post('/change-password', authMiddleware, AuthController.changePassword);
 app.post('/forgot-password', AuthController.requestPasswordReset);
 app.post('/reset-password', AuthController.resetPassword);
 app.post('/activate', authMiddleware, AuthController.activate);
+app.get('/user/invited', authMiddleware, AuthController.getInvitedUsers);
 
 app.get('/services', ServiceController.list);
 

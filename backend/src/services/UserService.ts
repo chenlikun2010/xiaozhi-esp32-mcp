@@ -161,4 +161,10 @@ export class UserService {
 
         return user;
     }
+    async getInvitedUsers(inviteCode: string): Promise<User[]> {
+        return await this.userRepository.find({
+            where: { referredBy: inviteCode },
+            order: { createdAt: 'DESC' }
+        });
+    }
 }

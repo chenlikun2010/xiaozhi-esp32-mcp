@@ -147,10 +147,16 @@ export default function Dashboard() {
                     </p>
                 </div>
                 <div className="w-full md:w-auto flex flex-col md:flex-row gap-4">
-                    <Card className="p-3 md:p-4 bg-primary text-primary-foreground md:w-auto">
+                    <Card
+                        className="p-3 md:p-4 bg-primary text-primary-foreground md:w-auto cursor-pointer hover:bg-primary/90 transition-colors"
+                        onClick={() => navigate('/invite-list')}
+                    >
                         <div className="flex justify-between items-center gap-4">
-                            <span className="text-sm opacity-80">邀请码</span>
-                            <span className="text-lg md:text-xl font-mono font-bold tracking-wider">{user.inviteCode || 'N/A'}</span>
+                            <span className="text-sm opacity-80">邀请新用户</span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-lg md:text-xl font-mono font-bold tracking-wider">{user.inviteCode || 'N/A'}</span>
+                                <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">详情 &gt;</span>
+                            </div>
                         </div>
                     </Card>
                     <Button className="w-full md:w-auto bg-white text-primary hover:bg-gray-100 border border-gray-200 shadow-sm" onClick={() => navigate('/marketplace')}>

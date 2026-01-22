@@ -367,3 +367,45 @@ pm2 restart mcp-backend
 - `backend/src/utils/deepseek_ocr.ts` - 更正 OCR 模型名称
 - `backend/package.json` - 新增 pdf-to-img 依赖
 
+### 2026-01-21: 图片上传支持与UI优化
+
+**更新内容**:
+1.后端: 支持图片文件上传与 OCR 识别 (`.jpg`, `.png` 等)。
+2.前端: 
+   - 首页标题与 Dashboard 文案优化 (移除"小慧"，添加"机器人")。
+   - Dashboard 显示账号有效期。
+   - 上传组件 UI 更新。
+
+**升级步骤**:
+
+```bash
+# 1. 拉取最新代码
+cd ~/app
+git pull
+
+# 2. 后端升级
+cd backend
+npm install          # 确保依赖更新
+npm run build        # 重新编译 TypeScript
+pm2 restart mcp-backend
+
+# 3. 前端升级
+cd ../frontend
+npm install          # 确保依赖更新
+npm run build        # 重新编译前端静态资源
+# Nginx 会自动读取最新的 dist 目录，无需重启 Nginx (除非修改了 nginx 配置)
+
+# 4. 验证
+# - 刷新页面，检查首页标题是否变更为 "机器人 MCP 服务平台"
+# - 登录 Dashboard，检查是否显示 "有效期至..."
+# - 尝试上传一张图片，验证是否能成功解析
+```
+
+**变更文件**:
+- `backend/src/controllers/UserKnowledgeController.ts`
+- `backend/src/services/UserKnowledgeService.ts`
+- `frontend/src/pages/KnowledgeBase.tsx`
+- `frontend/src/pages/Dashboard.tsx`
+- `frontend/src/components/Layout.tsx`
+- `frontend/index.html`
+

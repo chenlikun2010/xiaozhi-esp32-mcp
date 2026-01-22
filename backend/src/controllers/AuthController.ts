@@ -131,4 +131,44 @@ export class AuthController {
             return res.status(400).json({ message: error.message });
         }
     }
+    static async getInvitedUsers(req: Request, res: Response) {
+        try {
+            // @ts-ignore
+            const user = req.user;
+            // Need to fetch full user to get invite code if not in token, 
+            // but usually it is in token or we fetch it. 
+            // Let's rely on fetching user from DB to be safe or just use token if available.
+            // The token logic in login puts inviteCode in the payload? 
+            // Let's check logic: token has { userId, email, role }. It does NOT have inviteCode.
+
+            const fullUser = await userService.findByEmail(user.email);
+            if (!fullUser) return res.status(404).json({ message: "User not found" });
+
+            const invitedUsers = await userService.getInvitedUsers(fullUser.invitationCode);
+
+            // Format response
+            const responseData = invitedUsers.map(u => {
+                // Mask email: k***9 (first char + *** + last char) or similar
+                const emailParts = u.email.split('@');
+                const namePart = emailParts[0];
+                let maskedName = namePart;
+                if (namePart.length > 2) {
+                    maskedName = namePart[0] + '***' + namePart[namePart.length - 1];
+                } else {
+                    maskedName = namePart[0] + '***';
+                }
+
+                return {
+                    email: maskedName, // displaying as "受邀用户"
+                    giftDays: 7, // Fixed as per logic
+                    createdAt: u.createdAt,
+                    expireDate: u.expireDate
+                };
+            });
+
+            return res.json(responseData);
+        } catch (error: any) {
+            return res.status(500).json({ message: error.message });
+        }
+    }
 }

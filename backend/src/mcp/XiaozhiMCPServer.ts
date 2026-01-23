@@ -34,9 +34,6 @@ export class XiaozhiMCPServer {
         this.userId = userId;
 
         this.transport = new WebSocketClientTransport(wssUrl);
-
-        // Register tools based on service name
-        this.setupTools();
     }
 
     private async wrapHandler(handler: (args: any) => Promise<any>, args: any, toolName: string) {
@@ -64,7 +61,7 @@ export class XiaozhiMCPServer {
         }
     }
 
-    private setupTools() {
+    private async setupTools() {
         console.log(`[XiaozhiMCPServer] Setting up tools for service: '${this.serviceName}'`);
 
         // Base tools
@@ -92,11 +89,11 @@ export class XiaozhiMCPServer {
         } else if (this.serviceName.includes("快递") || this.serviceName.includes("Express")) {
             this.registerExpressTools();
         } else if (this.serviceName.includes("航班") || this.serviceName.includes("Flight") || this.serviceName.includes("Variflight")) {
-            this.registerVariflightTools();
+            await this.registerVariflightTools();
         } else if (this.serviceName.includes("新闻") || this.serviceName.includes("News") || this.serviceName.includes("Verge")) {
-            this.registerVergeNewsTools();
+            await this.registerVergeNewsTools();
         } else if (this.serviceName.includes("小说") || this.serviceName.includes("Novel") || this.serviceName.includes("Fanqie")) {
-            this.registerFanqieTools();
+            await this.registerFanqieTools();
         } else {
             console.warn(`Unknown service name: ${this.serviceName}. Only base tools registered.`);
         }
@@ -116,7 +113,7 @@ export class XiaozhiMCPServer {
         const command = "node";
         // Path relative to backend root
         const args = ["services/verge-news-mcp/build/index.js"];
-        const env = { ...process.env } as Record<string, string>; // Pass env in case needed
+        const env = { ...process.env } as Record<string, string>;
 
         await this.registerStdioTools(command, args, env);
     }
@@ -131,7 +128,7 @@ export class XiaozhiMCPServer {
         const command = "node";
         // Assuming running from backend root, node_modules is there.
         const args = ["node_modules/.bin/variflight-mcp"];
-        const env = { ...process.env, VARIFLIGHT_API_KEY: apiKey };
+        const env = { ...process.env, VARIFLIGHT_API_KEY: apiKey } as Record<string, string>;
 
         await this.registerStdioTools(command, args, env);
     }
@@ -161,11 +158,19 @@ export class XiaozhiMCPServer {
 
             for (const tool of result.tools) {
                 console.log(`[StdioMCP] Registering tool: ${tool.name}`);
-                this.server.tool(
+
+                // Store original schema for ListTools override
+                this.proxyToolSchemas.set(tool.name, tool.inputSchema);
+
+                this.server.registerTool(
                     tool.name,
-                    tool.inputSchema as any,
+                    {
+                        inputSchema: z.object({}).passthrough()
+                    },
                     async (args: any) => {
                         console.log(`[StdioMCP] Proxying request for ${tool.name}`);
+                        console.log(`[StdioMCP] Args:`, JSON.stringify(args));
+
                         return this.wrapHandler(async (a) => {
                             const callResult = await client.callTool({
                                 name: tool.name,
@@ -181,8 +186,6 @@ export class XiaozhiMCPServer {
             console.error(`[StdioMCP] Failed to register tools:`, error);
         }
     }
-
-    // ... (keep existing register methods for other tools)
 
     private registerGoldTools() {
         this.server.tool(
@@ -314,28 +317,87 @@ export class XiaozhiMCPServer {
         );
     }
 
-
+    private proxyToolSchemas: Map<string, any> = new Map();
 
     async connect() {
         if (this.isConnected) return;
 
         try {
+            await this.setupTools();
             console.log("Connecting to Xiaozhi via WebSocket...");
             await this.server.connect(this.transport);
             this.isConnected = true;
             console.log("MCP Server Connected and Ready.");
+
+            // Override ListTools to support JSON Schema for proxy tools
+            this.overrideListTools();
         } catch (error) {
             console.error("Failed to connect MCP Server:", error);
             throw error;
         }
     }
 
+    private overrideListTools() {
+        // Access internal server to overwrite handler
+        // @ts-ignore
+        const internalServer = this.server.server;
+
+        internalServer.setRequestHandler(require("@modelcontextprotocol/sdk/types.js").ListToolsRequestSchema, async () => {
+            // @ts-ignore
+            const registeredTools = this.server._registeredTools;
+            const toolsList = [];
+
+            for (const [name, tool] of Object.entries(registeredTools)) {
+                // @ts-ignore
+                if (!tool.enabled) continue;
+
+                let inputSchema;
+                if (this.proxyToolSchemas.has(name)) {
+                    // Use the original JSON schema for proxy tools
+                    inputSchema = this.proxyToolSchemas.get(name);
+                } else {
+                    // Use SDK's conversion for Zod schemas
+                    // We try to mimic SDK logic roughly or just produce "any" if fails.
+                    // Since we can't easily access the internal zod-json-schema-compat, 
+                    // we might have to accept that we only strictly fix the Proxy tools here.
+                    // BUT valid Zod tools need their schema.
+                    // Fortunately, McpServer tools usually hold the Zod schema in tool.inputSchema.
+                    // We can try to use a basic replacement or if possible rely on internal props if available.
+
+                    // Actually, we can try to require the compat module if the path is stable.
+                    try {
+                        const { normalizeObjectSchema } = require("@modelcontextprotocol/sdk/server/zod-compat.js");
+                        const { toJsonSchemaCompat } = require("@modelcontextprotocol/sdk/server/zod-json-schema-compat.js");
+
+                        // @ts-ignore
+                        const obj = normalizeObjectSchema(tool.inputSchema);
+                        inputSchema = obj ? toJsonSchemaCompat(obj, { strictUnions: true, pipeStrategy: 'input' }) : { type: "object", properties: {} };
+                    } catch (e) {
+                        console.warn("Could not load Zod compat utils, falling back to basic schema for", name);
+                        inputSchema = { type: "object", properties: {} };
+                    }
+                }
+
+                toolsList.push({
+                    name,
+                    // @ts-ignore
+                    title: tool.title,
+                    // @ts-ignore
+                    description: tool.description,
+                    inputSchema,
+                    // @ts-ignore
+                    annotations: tool.annotations
+                });
+            }
+
+            return { tools: toolsList };
+        });
+    }
+
     async disconnect() {
         this.stdioClients.forEach(client => {
             try {
-                // client.close(); // SDK Client doesn't have explicit close typically, but transport does. 
-                // transport closing is handled if we had access to it.
-                // But generally child process should be killed if we exit.
+                // client.close(); 
             } catch (e) {
                 console.error("Error closing stdio client:", e);
             }

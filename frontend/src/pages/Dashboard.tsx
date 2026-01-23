@@ -198,15 +198,48 @@ export default function Dashboard() {
                                     <code className="text-xs flex-1 truncate select-all">{instance.xiaozhiWssUrl}</code>
                                     <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => {
                                         const text = instance.xiaozhiWssUrl;
-                                        if (navigator.clipboard && window.isSecureContext) {
-                                            navigator.clipboard.writeText(text).then(() => {
-                                                alert("WebSocket 地址已复制到剪贴板！");
-                                            }).catch(() => {
-                                                prompt("复制失败，请手动复制：", text);
-                                            });
-                                        } else {
-                                            prompt("请手动复制 WebSocket 地址：", text);
-                                        }
+
+                                        // Robust copy function with fallback
+                                        const copyToClipboard = async (text: string) => {
+                                            if (navigator.clipboard) {
+                                                try {
+                                                    await navigator.clipboard.writeText(text);
+                                                    alert("WebSocket 地址已复制到剪贴板！");
+                                                    return;
+                                                } catch (err) {
+                                                    console.warn('Navigator clipboard failed, trying fallback', err);
+                                                }
+                                            }
+
+                                            // Fallback for http or older browsers
+                                            try {
+                                                const textArea = document.createElement("textarea");
+                                                textArea.value = text;
+
+                                                // Ensure it's not visible but part of DOM
+                                                textArea.style.position = "fixed";
+                                                textArea.style.left = "-9999px";
+                                                textArea.style.top = "0";
+                                                document.body.appendChild(textArea);
+
+                                                textArea.focus();
+                                                textArea.select();
+
+                                                const successful = document.execCommand('copy');
+                                                document.body.removeChild(textArea);
+
+                                                if (successful) {
+                                                    alert("WebSocket 地址已复制到剪贴板！");
+                                                } else {
+                                                    prompt("复制失败，请手动复制：", text);
+                                                }
+                                            } catch (err) {
+                                                console.error('Fallback copy failed', err);
+                                                prompt("请手动复制 WebSocket 地址：", text);
+                                            }
+                                        };
+
+                                        copyToClipboard(text);
                                     }}>
                                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>
                                     </Button>

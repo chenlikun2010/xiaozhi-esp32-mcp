@@ -160,6 +160,12 @@ REPORT_POLL_INTERVAL_MS=60000
 REPORT_MAX_CONCURRENT=3
 REPORTS_API_URL=https://m.fckvip.cn//api/words/getWords?pageSize=30
 FETCH_REPORTS_CRON="0 7,22 * * *"
+ 
+ # Qibook 企业信息 MCP（可选）
+ # 设置访问密钥和服务地址，默认使用 https://mcp.bidata.com/mcp/basic
+ QIBOOK_ACCESS_KEY=YOUR_QIBOOK_ACCESS_KEY
+ # 如需自定义服务地址（例如 ModelScope/DashScope SSE），设置如下：
+ # QIBOOK_SERVER_URL=https://dashscope.aliyuncs.com/api/v1/mcps/qibook/basic_ent_tools/sse
 ```
 
 ### 4.3 初始化数据

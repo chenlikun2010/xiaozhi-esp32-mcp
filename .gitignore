@@ -55,3 +55,4 @@ backend/src/scripts/*.png
 
 # User uploaded files
 backend/uploads/user_kb/
+backend/services/

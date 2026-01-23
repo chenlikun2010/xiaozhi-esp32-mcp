@@ -13,4 +13,13 @@ export class MCPService {
 
     @Column({ name: 'image_url', nullable: true })
     imageUrl?: string;
+
+    @Column({ default: "stopped" })
+    status!: string;
+
+    @Column({ nullable: true })
+    url?: string;
+
+    @Column("text", { nullable: true })
+    config?: string;
 }

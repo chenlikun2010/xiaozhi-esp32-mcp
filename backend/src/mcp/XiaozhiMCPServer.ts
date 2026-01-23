@@ -1,3 +1,5 @@
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebSocketClientTransport } from "./WebSocketClientTransport";
 import { z } from "zod";
@@ -20,6 +22,7 @@ export class XiaozhiMCPServer {
     private serviceName: string;
     private checkExpiry?: () => Promise<boolean>;
     private userId?: number;
+    private stdioClients: Client[] = [];
 
     constructor(wssUrl: string, serviceName: string = "Xiaozhi MCP Service", checkExpiry?: () => Promise<boolean>, userId?: number) {
         this.server = new McpServer({
@@ -88,10 +91,98 @@ export class XiaozhiMCPServer {
             this.registerPrivateDocsTool();
         } else if (this.serviceName.includes("快递") || this.serviceName.includes("Express")) {
             this.registerExpressTools();
+        } else if (this.serviceName.includes("航班") || this.serviceName.includes("Flight") || this.serviceName.includes("Variflight")) {
+            this.registerVariflightTools();
+        } else if (this.serviceName.includes("新闻") || this.serviceName.includes("News") || this.serviceName.includes("Verge")) {
+            this.registerVergeNewsTools();
+        } else if (this.serviceName.includes("小说") || this.serviceName.includes("Novel") || this.serviceName.includes("Fanqie")) {
+            this.registerFanqieTools();
         } else {
             console.warn(`Unknown service name: ${this.serviceName}. Only base tools registered.`);
         }
     }
+
+    private async registerFanqieTools() {
+        console.log("[XiaozhiMCPServer] Registering Fanqie Novel tools...");
+        const command = "node";
+        const args = ["services/mcp-server-fanqie/build/index.js"];
+        const env = { ...process.env } as Record<string, string>;
+
+        await this.registerStdioTools(command, args, env);
+    }
+
+    private async registerVergeNewsTools() {
+        console.log("[XiaozhiMCPServer] Registering Verge News tools...");
+        const command = "node";
+        // Path relative to backend root
+        const args = ["services/verge-news-mcp/build/index.js"];
+        const env = { ...process.env } as Record<string, string>; // Pass env in case needed
+
+        await this.registerStdioTools(command, args, env);
+    }
+
+    private async registerVariflightTools() {
+        const apiKey = process.env.VARIFLIGHT_API_KEY;
+        if (!apiKey) {
+            console.error("VARIFLIGHT_API_KEY not found in environment variables.");
+            return;
+        }
+
+        const command = "node";
+        // Assuming running from backend root, node_modules is there.
+        const args = ["node_modules/.bin/variflight-mcp"];
+        const env = { ...process.env, VARIFLIGHT_API_KEY: apiKey };
+
+        await this.registerStdioTools(command, args, env);
+    }
+
+    private async registerStdioTools(command: string, args: string[], env: Record<string, string>) {
+        console.log(`[StdioMCP] Registering stdio tools: ${command} ${args.join(" ")}`);
+
+        try {
+            const transport = new StdioClientTransport({
+                command,
+                args,
+                env
+            });
+
+            const client = new Client({
+                name: "XiaozhiMCPServer-Client",
+                version: "1.0.0"
+            }, {
+                capabilities: {}
+            });
+
+            await client.connect(transport);
+            this.stdioClients.push(client);
+
+            const result = await client.listTools();
+            console.log(`[StdioMCP] Found ${result.tools.length} tools`);
+
+            for (const tool of result.tools) {
+                console.log(`[StdioMCP] Registering tool: ${tool.name}`);
+                this.server.tool(
+                    tool.name,
+                    tool.inputSchema as any,
+                    async (args: any) => {
+                        console.log(`[StdioMCP] Proxying request for ${tool.name}`);
+                        return this.wrapHandler(async (a) => {
+                            const callResult = await client.callTool({
+                                name: tool.name,
+                                arguments: a
+                            });
+                            return callResult;
+                        }, args, tool.name);
+                    }
+                );
+            }
+
+        } catch (error) {
+            console.error(`[StdioMCP] Failed to register tools:`, error);
+        }
+    }
+
+    // ... (keep existing register methods for other tools)
 
     private registerGoldTools() {
         this.server.tool(
@@ -240,6 +331,16 @@ export class XiaozhiMCPServer {
     }
 
     async disconnect() {
+        this.stdioClients.forEach(client => {
+            try {
+                // client.close(); // SDK Client doesn't have explicit close typically, but transport does. 
+                // transport closing is handled if we had access to it.
+                // But generally child process should be killed if we exit.
+            } catch (e) {
+                console.error("Error closing stdio client:", e);
+            }
+        });
+
         if (!this.isConnected) return;
 
         try {

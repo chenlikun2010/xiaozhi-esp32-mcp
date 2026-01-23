@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS user_knowledge_embeddings (
     file_id INTEGER NOT NULL REFERENCES user_knowledge_files(id) ON DELETE CASCADE,
     user_id INTEGER NOT NULL,                          -- 冗余存储，便于快速按用户检索
     content TEXT NOT NULL,                             -- 文本段落内容
-    embedding vector(1024) NOT NULL,                   -- BGE-M3 向量 (1024维)
+    embedding vector(2560) NOT NULL,                   -- Qwen/Qwen3-Embedding-4B 向量 (2560维)
     chunk_index INTEGER DEFAULT 0,                     -- 分片序号
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -55,10 +55,11 @@ CREATE INDEX IF NOT EXISTS idx_user_knowledge_embeddings_file_id
 
 -- 为 embedding 字段创建 HNSW 索引，加速向量相似度搜索
 -- 使用余弦距离 (cosine distance) 作为相似度度量
-CREATE INDEX IF NOT EXISTS idx_user_knowledge_embeddings_hnsw 
-    ON user_knowledge_embeddings 
-    USING hnsw (embedding vector_cosine_ops)
-    WITH (m = 16, ef_construction = 64);
+-- 2560维向量超出 HNSW 2000维限制，暂时禁用索引，使用精确搜索
+-- CREATE INDEX IF NOT EXISTS idx_user_knowledge_embeddings_hnsw 
+--     ON user_knowledge_embeddings 
+--     USING hnsw (embedding vector_cosine_ops)
+--     WITH (m = 16, ef_construction = 64);
 
 -- ============================================================
 -- 示例查询：按用户进行语义搜索

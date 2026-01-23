@@ -8,12 +8,15 @@
  * - 实现并发控制和重试逻辑
  */
 
-import 'dotenv/config';
+import * as path from 'path';
+import * as dotenv from 'dotenv';
+// Explicitly resolve .env path
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
 import { Pool } from 'pg';
 import * as fs from 'fs';
-import * as path from 'path';
 import axios from 'axios';
-import PDFParse from 'pdf-parse';
+const PDFParse = require('pdf-parse');
 import mammoth from 'mammoth';
 import officeParser from 'officeparser';
 import pLimit from 'p-limit';
@@ -117,6 +120,20 @@ async function parseTxt(filePath: string): Promise<string> {
     return fs.readFileSync(filePath, 'utf-8');
 }
 
+const XLSX = require('xlsx');
+
+async function parseExcel(filePath: string): Promise<string> {
+    const workbook = XLSX.readFile(filePath);
+    let text = '';
+    // Iterate through all sheets
+    for (const sheetName of workbook.SheetNames) {
+        const sheet = workbook.Sheets[sheetName];
+        const csv = XLSX.utils.sheet_to_csv(sheet);
+        text += `[${sheetName}]\n${csv}\n\n`;
+    }
+    return text;
+}
+
 async function parseFile(filePath: string, fileType: string): Promise<string> {
     const ext = fileType.toLowerCase();
 
@@ -126,10 +143,11 @@ async function parseFile(filePath: string, fileType: string): Promise<string> {
         case 'docx':
         case 'doc':
             return parseDocx(filePath);
-        case 'pptx':
-        case 'ppt':
         case 'xlsx':
         case 'xls':
+            return parseExcel(filePath);
+        case 'pptx':
+        case 'ppt':
             return parseOffice(filePath);
         case 'txt':
         case 'md':
@@ -333,6 +351,10 @@ async function processFile(file: KnowledgeFile): Promise<void> {
         const userDir = path.join(config.uploadDir, String(file.user_id));
         const files = fs.existsSync(userDir) ? fs.readdirSync(userDir) : [];
 
+        console.log(`[Worker Debug] UserDir: ${userDir}`);
+        console.log(`[Worker Debug] Target: ${file.file_name}`);
+        console.log(`[Worker Debug] Files: ${JSON.stringify(files)}`);
+
         // 查找匹配的文件 (格式: timestamp_filename)
         const matchedFile = files.find(f => f.endsWith(file.file_name));
         if (!matchedFile) {
@@ -402,6 +424,7 @@ async function runWorker(): Promise<void> {
     console.log(`Poll Interval: ${config.pollIntervalMs}ms`);
     console.log(`Max Concurrent: ${config.maxConcurrent}`);
     console.log(`Embedding Concurrency: ${config.embeddingConcurrency}`);
+    console.log(`Upload Dir: ${config.uploadDir}`);
     console.log('========================================\n');
 
     const processLoop = async () => {

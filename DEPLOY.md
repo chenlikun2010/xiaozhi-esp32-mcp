@@ -409,3 +409,47 @@ npm run build        # 重新编译前端静态资源
 - `frontend/src/components/Layout.tsx`
 - `frontend/index.html`
 
+### 2026-01-23: 快递查询服务与邀请机制
+
+**更新内容**:
+1.  **新增服务**: 集成 Kuaidi100 API，提供"快递查询助手"服务，支持自动识别快递公司。
+2.  **邀请机制**:
+    *   后端: 新增 `/api/user/invited` 接口，支持查询受邀用户列表。
+    *   前端: 新增邀请列表页面 `/invite-list`，展示邀请码及受邀好友详情。
+    *   Dashboard: 邀请码卡片更新为可点击链接。
+3.  **系统优化**:
+    *   **会话失效修复**: 前端新增拦截器，API 返回 401/403 时自动跳转登录页。
+
+**升级步骤**:
+
+```bash
+# 1. 拉取最新代码
+cd ~/app
+git pull
+
+# 2. 后端升级
+cd backend
+npm install          # 安装新依赖 (crypto等)
+npm run build        # 重新编译
+# 注册 Kuaidi100 服务 (仅需运行一次)
+npx ts-node src/scripts/add_kuaidi_service.ts
+pm2 restart mcp-backend
+
+# 3. 前端升级
+cd ../frontend
+npm install
+npm run build        # 编译新页面
+
+# 4. 验证
+# - 登录后进入"服务市场"，确认"快递查询助手"已上线。
+# - 尝试对话查询快递："查询顺丰 SF3267298793600" (需确保提供手机号)。
+# - 点击 Dashboard "邀请码" 卡片，进入邀请列表页查看信息。
+# - 模拟 Token 过期 (手动清除 localStorage user/token) 后刷新页面，确认跳转到登录页。
+```
+
+**变更文件**:
+- `backend/src/mcp/tools/Kuaidi100Tool.ts`
+- `backend/src/scripts/add_kuaidi_service.ts`
+- `backend/src/controllers/AuthController.ts`
+- `frontend/src/pages/InviteList.tsx`
+- `frontend/src/App.tsx`

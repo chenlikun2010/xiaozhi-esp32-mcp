@@ -11,6 +11,7 @@ import { GetGoldPriceDefinition, handleGetGoldPrice } from "./tools/GoldPriceToo
 import { SearchReportsDefinition, handleSearchReports } from "./tools/ReportSearchTool";
 import { ReportExpertDefinition, handleReportExpert } from "./tools/ReportExpertTool";
 import { PrivateDocsSearchDefinition, handlePrivateDocsSearch } from "./tools/PrivateDocsSearchTool";
+import { GetExpressInfoDefinition, handleGetExpressInfo } from "./tools/Kuaidi100Tool";
 
 export class XiaozhiMCPServer {
     private server: McpServer;
@@ -85,6 +86,8 @@ export class XiaozhiMCPServer {
             this.registerReportTool();
         } else if (this.serviceName.includes("知识库") || this.serviceName.includes("Knowledge")) {
             this.registerPrivateDocsTool();
+        } else if (this.serviceName.includes("快递") || this.serviceName.includes("Express")) {
+            this.registerExpressTools();
         } else {
             console.warn(`Unknown service name: ${this.serviceName}. Only base tools registered.`);
         }
@@ -95,6 +98,14 @@ export class XiaozhiMCPServer {
             GetGoldPriceDefinition.name,
             GetGoldPriceDefinition.schema,
             async (args) => this.wrapHandler(handleGetGoldPrice, args, GetGoldPriceDefinition.name)
+        );
+    }
+
+    private registerExpressTools() {
+        this.server.tool(
+            GetExpressInfoDefinition.name,
+            GetExpressInfoDefinition.schema,
+            async (args) => this.wrapHandler(handleGetExpressInfo, args, GetExpressInfoDefinition.name)
         );
     }
 

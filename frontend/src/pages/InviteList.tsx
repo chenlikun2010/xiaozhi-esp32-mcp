@@ -5,6 +5,7 @@ import { Card } from '../components/ui/card';
 import Layout from '../components/Layout';
 import { Copy, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { copyToClipboard } from '../lib/utils';
 
 interface InvitedUser {
     email: string;
@@ -37,12 +38,14 @@ export default function InviteList() {
 
     const inviteLink = `${window.location.origin}/register?inviteCode=${user.inviteCode}`;
 
-    const handleCopy = () => {
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(inviteLink).then(() => {
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-            });
+    const handleCopy = async () => {
+        const success = await copyToClipboard(inviteLink);
+        if (success) {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } else {
+            // Fallback alert if even execCommand fails (rare)
+            alert('复制失败，请手动复制：\n' + inviteLink);
         }
     };
 

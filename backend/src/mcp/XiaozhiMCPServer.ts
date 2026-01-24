@@ -4,6 +4,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebSocketClientTransport } from "./WebSocketClientTransport";
 import { z } from "zod";
 import { QwenSearchToolDefinition, handleQwenSearch } from "./tools/QwenSearchTool";
+import { ZhipuSearchToolDefinition, handleZhipuSearch } from "./tools/ZhipuSearchTool";
 import { HowToCookToolDefinition, handleHowToCook } from "./tools/HowToCookTool";
 import { StartMbtiTestDefinition, AnswerQuestionDefinition, CalculateMbtiResultDefinition, handleStartMbtiTest, handleAnswerQuestion, handleCalculateResult } from "./tools/MbtiTool";
 import { GetStockQuoteDefinition, GetStockHistoryDefinition, handleGetStockQuote, handleGetStockHistory } from "./tools/StockTool";
@@ -68,7 +69,8 @@ export class XiaozhiMCPServer {
         this.registerBaseTools();
 
         // Conditional Registration
-        if (this.serviceName.includes("联网搜索")) {
+        if (this.serviceName.includes("联网搜索") || this.serviceName.includes("Internet Search")) {
+            this.registerZhipuSearchTool();
             this.registerQwenSearchTool();
         } else if (this.serviceName.includes("做饭") || this.serviceName.includes("菜谱")) {
             this.registerCookTool();
@@ -221,6 +223,14 @@ export class XiaozhiMCPServer {
             QwenSearchToolDefinition.name,
             QwenSearchToolDefinition.schema,
             async (args) => this.wrapHandler(handleQwenSearch, args, QwenSearchToolDefinition.name)
+        );
+    }
+
+    private registerZhipuSearchTool() {
+        this.server.tool(
+            ZhipuSearchToolDefinition.name,
+            ZhipuSearchToolDefinition.schema,
+            async (args) => this.wrapHandler(handleZhipuSearch, args, ZhipuSearchToolDefinition.name)
         );
     }
 

@@ -2,7 +2,7 @@ import axios from 'axios';
 import { z } from 'zod';
 
 export const QwenSearchToolDefinition = {
-    name: "internet_search",
+    name: "qwen_internet_search",
     description: "Search the internet for up-to-date information using Alibaba Qwen AI.",
     schema: {
         query: z.string().describe("The search query to find information about."),

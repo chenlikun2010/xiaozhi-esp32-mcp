@@ -496,3 +496,41 @@ pm2 restart mcp-backend
 - `backend/services/mcp-server-fanqie/src/index.ts` (添加数据简化逻辑)
 - `backend/services/mcp-server-fanqie/src/FanQieApi.ts` (优化日志)
 - `.gitignore` (允许提交 services 目录)
+
+
+### 2026-01-24: 联网搜索升级 - 智谱 AI
+
+**更新内容**:
+1.  **新增搜索源**: 默认使用智谱 AI (ZhipuAI GLM) 进行联网搜索，提供更精准的搜索结果。
+2.  **保留旧源**: 原通义千问 (Qwen) 搜索作为备用，工具名变更为 `qwen_internet_search`。
+3.  **配置更新**: 需要配置 `ZHIPU_API_KEY`。
+
+**升级步骤**:
+
+```bash
+# 1. 拉取最新代码
+cd ~/app
+git pull
+
+# 2. 更新后端代码并编译
+cd backend
+npm install
+npm run build
+
+# 3. 配置 .env
+nano .env
+# 添加或更新以下内容:
+# ZHIPU_API_KEY=95eaaa5ffcf747d001ab32bb48894a9a.vrPMJt8jw3TKNjpz
+
+# 4. 重启后端服务
+pm2 restart mcp-backend
+
+# 5. 验证
+# - 登录系统，对话输入 "查一下今天的新闻" 或 "Search internet for latest AI news"
+# - 检查日志或结果，确认调用的是 [Zhipu Search]
+```
+
+**变更文件**:
+- `backend/src/mcp/tools/ZhipuSearchTool.ts` (新增)
+- `backend/src/mcp/tools/QwenSearchTool.ts` (重命名工具)
+- `backend/src/mcp/XiaozhiMCPServer.ts` (注册新工具)

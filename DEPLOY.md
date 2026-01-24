@@ -459,3 +459,40 @@ npm run build        # 编译新页面
 - `backend/src/controllers/AuthController.ts`
 - `frontend/src/pages/InviteList.tsx`
 - `frontend/src/App.tsx`
+
+
+### 2026-01-24: 番茄小说服务网络优化
+
+**更新内容**:
+1.  **性能优化**: 针对番茄小说服务 (`mcp-server-fanqie`) 进行了网络传输优化，极大减少了 API 响应包体大小 (减少 ~90%)。
+2.  **稳定性修复**: 解决了因 Response Payload 过大导致的 WebSocket 连接超时/断开问题 ("网络出现了异常")。
+3.  **代码提交**: 将 `backend/services/mcp-server-fanqie` 正式纳入 Git 版本控制。
+
+**升级步骤**:
+
+```bash
+# 1. 拉取最新代码
+cd ~/app
+git pull
+# 注意：如果提示 'backend/services/mcp-server-fanqie' 冲突或空目录，请先删除该目录再 pull
+# rm -rf backend/services/mcp-server-fanqie
+# git checkout backend/services/mcp-server-fanqie
+
+# 2. 编译番茄小说子服务 【关键步骤】
+cd backend/services/mcp-server-fanqie
+npm install          # 安装子服务依赖
+npm run build        # 编译子服务 (必须执行，否则旧代码仍会生效)
+
+# 3. 重启后端服务
+cd ../../../backend  # 回到 backend 目录
+pm2 restart mcp-backend
+
+# 4. 验证
+# - 在对话框中输入 "找下修仙类小说"
+# - 确认响应迅速且无网络异常报错
+```
+
+**变更文件**:
+- `backend/services/mcp-server-fanqie/src/index.ts` (添加数据简化逻辑)
+- `backend/services/mcp-server-fanqie/src/FanQieApi.ts` (优化日志)
+- `.gitignore` (允许提交 services 目录)

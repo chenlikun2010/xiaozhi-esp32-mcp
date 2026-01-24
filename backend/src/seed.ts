@@ -11,7 +11,7 @@ const seed = async () => {
         console.log("Seeding MCP Services...");
         const services = [
             { name: "Internet Search", description: "Search the web using Qwen Search (Alibaba).", imageUrl: "https://img.alice.com/search_icon.png" }, // Placeholder image or empty
-            { name: "File Reader", description: "Read files from the filesystem." },
+
             { name: "Database Connector", description: "Connect to SQL databases." }
         ];
 

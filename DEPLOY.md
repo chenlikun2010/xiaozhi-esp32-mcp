@@ -534,3 +534,32 @@ pm2 restart mcp-backend
 - `backend/src/mcp/tools/ZhipuSearchTool.ts` (新增)
 - `backend/src/mcp/tools/QwenSearchTool.ts` (重命名工具)
 - `backend/src/mcp/XiaozhiMCPServer.ts` (注册新工具)
+
+
+### 2026-01-24: 修复新闻服务 (Verge News) 部署
+
+**问题描述**: 更新代码后，新闻查询服务不可用。
+**原因**: 新闻服务作为一个独立的子模块 (`backend/services/verge-news-mcp`)，如果是首次拉取或者目录被删除重建，**必须重新编译**才能生成对应的 `build/index.js` 文件。
+
+**修复步骤**:
+
+```bash
+# 1. 确保在正确的目录
+cd ~/app/backend/services/verge-news-mcp
+
+# 2. 安装依赖并编译
+npm install
+npm run build
+
+# 检查编译结果: 应该看到 build 文件夹
+ls -l build/index.js 
+
+# 3. 回到 backend 目录重新启动
+cd ../../../backend
+pm2 restart mcp-backend
+
+# 4. 验证
+# - 登录后输入 "Check today's tech news"
+```
+
+**提示**: 凡是 `backend/services/` 下的子服务 (如 `mcp-server-fanqie` 或 `verge-news-mcp`)，在代码更新后都建议进入该目录执行一次 `npm install && npm run build`。

@@ -315,12 +315,7 @@ export default function createServer({
 
   const server = new McpServer({
     name: "verge-news",
-    version: "1.0.0",
-    capabilities: {
-      tools: {},
-      resources: {},
-      prompts: {}
-    }
+    version: "1.0.0"
   });
 
   // Tool: Get daily news with optional category filter

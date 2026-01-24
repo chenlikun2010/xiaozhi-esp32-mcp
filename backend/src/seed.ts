@@ -10,7 +10,7 @@ const seed = async () => {
     if (count === 0) {
         console.log("Seeding MCP Services...");
         const services = [
-            { name: "Internet Search", description: "Search the web using Qwen Search (Alibaba).", imageUrl: "https://img.alice.com/search_icon.png" }, // Placeholder image or empty
+            { name: "Internet Search", description: "Search the web using Zhipu AI (GLM) for up-to-date information.", imageUrl: "https://img.alice.com/search_icon.png" }, // Placeholder image or empty
 
             { name: "Database Connector", description: "Connect to SQL databases." }
         ];

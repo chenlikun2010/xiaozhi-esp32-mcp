@@ -26,11 +26,13 @@ async function checkDim() {
             }
         );
 
-        if (response.data && response.data.data && response.data.data.length > 0) {
-            const dim = response.data.data[0].embedding.length;
+        const data = response.data as any;
+
+        if (data && data.data && data.data.length > 0) {
+            const dim = data.data[0].embedding.length;
             console.log(`Dimension: ${dim}`);
         } else {
-            console.error("No data returned", response.data);
+            console.error("No data returned", data);
         }
 
     } catch (error: any) {

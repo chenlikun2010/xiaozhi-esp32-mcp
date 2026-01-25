@@ -49,8 +49,9 @@ async function getEmbedding(text: string): Promise<number[]> {
             }
         );
 
-        if (response.data && response.data.data && response.data.data.length > 0) {
-            return response.data.data[0].embedding;
+        const data = response.data as any;
+        if (data && data.data && data.data.length > 0) {
+            return data.data[0].embedding;
         }
         throw new Error('No embedding returned');
     } catch (error: any) {
@@ -76,12 +77,13 @@ async function migrate() {
         // Actually, we can just force alter.
         // But if we alter from 1024 to 2560, we MUST convert existing data or set to NULL.
         // "USING NULL" sets all values to NULL.
-        console.log("Altering column to vector(2560)... (This will reset embeddings to NULL)");
+        console.log("Dropping and re-creating embedding column (2560 dims)...");
         try {
-            await client.query('ALTER TABLE report_embeddings ALTER COLUMN embedding TYPE vector(2560) USING NULL');
+            await client.query('ALTER TABLE report_embeddings DROP COLUMN IF EXISTS embedding');
+            await client.query('ALTER TABLE report_embeddings ADD COLUMN embedding vector(2560)');
         } catch (e: any) {
-            console.error("Alter failed (maybe already 2560 but check data?):", e.message);
-            // If it fails, maybe assume it's already done?
+            console.error("Column reset failed:", e.message);
+            throw e;
         }
 
         await client.query('COMMIT');

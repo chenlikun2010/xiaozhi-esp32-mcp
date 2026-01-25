@@ -1,19 +1,21 @@
 import YahooFinance from 'yahoo-finance2';
+import axios from 'axios';
+import iconv from 'iconv-lite';
+import { z } from 'zod';
+
+// Initialize YahooFinance with options to suppress noise
 const yahooFinance = new YahooFinance({
-    suppressNotices: ['yahooSurvey'],
-    // Attempt to set a browser-like User-Agent via internal module options if exposed, 
-    // or just rely on default. Recent versions allow more config.
+    suppressNotices: ['yahooSurvey']
 });
-// Force User-Agent override if possible or known workaround
+// Override User-Agent in case it helps with some blocks, but we rely on Sina fallback mostly.
 // @ts-ignore
 yahooFinance._opts = { ...yahooFinance._opts, headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' } };
-import { z } from 'zod';
 
 // --- Tool Definitions ---
 
 export const GetStockQuoteDefinition = {
     name: "get_stock_quote",
-    description: "Get real-time stock quote for a given symbol (e.g., AAPL, NVDA, 0700.HK).",
+    description: "Get real-time stock quote for a given symbol (e.g., AAPL, NVDA, 0700.HK, 600519.SS). Automatically falls back to alternative sources if blocked.",
     schema: {
         symbol: z.string().describe("The stock symbol to query.")
     }
@@ -28,14 +30,115 @@ export const GetStockHistoryDefinition = {
     }
 };
 
+// --- Helpers ---
+
+function normalizeToSinaCode(symbol: string): string | null {
+    const s = symbol.toUpperCase();
+
+    // HK Stocks: 0700.HK -> rt_hk00700
+    if (s.endsWith('.HK')) {
+        const code = s.replace('.HK', '');
+        return `rt_hk${code}`;
+    }
+
+    // US Stocks: AAPL -> gb_aapl
+    // Simple heuristic: if no suffix and length <= 5, assume US.
+    if (!s.includes('.') && s.length <= 5) {
+        return `gb_${s.toLowerCase()}`;
+    }
+
+    // CN A-Shares: 600519.SS -> sh600519, 000001.SZ -> sz000001
+    if (s.endsWith('.SS')) {
+        return `sh${s.replace('.SS', '')}`;
+    }
+    if (s.endsWith('.SZ')) {
+        return `sz${s.replace('.SZ', '')}`;
+    }
+
+    return null;
+}
+
+async function fetchSinaStock(sinaCode: string) {
+    const url = `http://hq.sinajs.cn/list=${sinaCode}`;
+    const response = await axios.get(url, {
+        responseType: 'arraybuffer',
+        headers: {
+            'Referer': 'https://finance.sina.com.cn/',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        },
+        timeout: 5000
+    });
+    return iconv.decode(response.data as Buffer, 'gb18030');
+}
+
+function parseSinaResponse(sinaCode: string, responseText: string) {
+    const matches = responseText.match(/="(.*)";/);
+    if (!matches || !matches[1]) return null;
+    const data = matches[1].split(',');
+    if (data.length < 5) return null; // Invalid data
+
+    // Output normalized to look like Yahoo's for consistency
+    let result: any = {
+        symbol: sinaCode, // Keep internal code or map back?
+        source: 'Sina Finance'
+    };
+
+    if (sinaCode.startsWith('rt_hk')) {
+        // HK: EnName, CnName, Open, PrevClose, High, Low, Last, Change, Change%
+        result.symbol = sinaCode.replace('rt_hk', '').toUpperCase() + '.HK';
+        result.shortName = data[0]; // English name often
+        result.longName = data[1];
+        result.currency = 'HKD';
+        result.regularMarketPrice = parseFloat(data[6]);
+        result.regularMarketChange = parseFloat(data[7]);
+        result.regularMarketChangePercent = parseFloat(data[8]);
+        result.regularMarketDayHigh = parseFloat(data[4]);
+        result.regularMarketDayLow = parseFloat(data[5]);
+        result.regularMarketOpen = parseFloat(data[2]);
+        result.regularMarketPreviousClose = parseFloat(data[3]);
+    } else if (sinaCode.startsWith('gb_')) {
+        // US: Name, Price, Change%, Time, Change, Open, High, Low
+        result.symbol = sinaCode.replace('gb_', '').toUpperCase();
+        result.shortName = data[0];
+        result.currency = 'USD';
+        result.regularMarketPrice = parseFloat(data[1]);
+        result.regularMarketChange = parseFloat(data[4]);
+        result.regularMarketChangePercent = parseFloat(data[2]);
+        result.regularMarketOpen = parseFloat(data[5]);
+        result.regularMarketDayHigh = parseFloat(data[6]);
+        result.regularMarketDayLow = parseFloat(data[7]);
+    } else {
+        // CN: Name, Open, PrevClose, Price, High, Low
+        // Infer SS or SZ from code? simplified.
+        result.symbol = sinaCode;
+        result.shortName = data[0];
+        result.currency = 'CNY';
+        result.regularMarketPrice = parseFloat(data[3]);
+        result.regularMarketOpen = parseFloat(data[1]);
+        result.regularMarketPreviousClose = parseFloat(data[2]);
+        result.regularMarketDayHigh = parseFloat(data[4]);
+        result.regularMarketDayLow = parseFloat(data[5]);
+
+        // Calculate change manually for CN
+        if (result.regularMarketPrice && result.regularMarketPreviousClose) {
+            result.regularMarketChange = parseFloat((result.regularMarketPrice - result.regularMarketPreviousClose).toFixed(3));
+            result.regularMarketChangePercent = parseFloat(((result.regularMarketChange / result.regularMarketPreviousClose) * 100).toFixed(2));
+        }
+    }
+
+    return result;
+}
+
 // --- Handlers ---
 
 export async function handleGetStockQuote(args: { symbol: string }) {
-    console.log(`[Chat Log] Stock Quote: ${args.symbol}`);
+    console.log(`[Stock] Fetching quote for: ${args.symbol}`);
+
+    // Strategy: Try Yahoo first (better data), catch error, try Sina fallback.
     try {
         const quote = await yahooFinance.quote(args.symbol) as any;
+        console.log(`[Stock] Yahoo success for ${args.symbol}`);
 
-        // Extract relevant fields to keep context size manageable
         const relevantData = {
             symbol: quote.symbol,
             shortName: quote.shortName || quote.longName,
@@ -45,16 +148,54 @@ export async function handleGetStockQuote(args: { symbol: string }) {
             changePercent: quote.regularMarketChangePercent,
             high: quote.regularMarketDayHigh,
             low: quote.regularMarketDayLow,
-            marketCap: quote.marketCap
+            marketCap: quote.marketCap,
+            source: "Yahoo Finance"
         };
 
         return {
             content: [{ type: "text" as const, text: JSON.stringify(relevantData, null, 2) }]
         };
     } catch (error: any) {
-        console.error(`[Stock] Error fetching quote for ${args.symbol}:`, error.message);
+        console.warn(`[Stock] Yahoo failed for ${args.symbol}: ${error.message}. Trying Sina fallback...`);
+
+        // Sina Fallback
+        const sinaCode = normalizeToSinaCode(args.symbol);
+        if (sinaCode) {
+            try {
+                const raw = await fetchSinaStock(sinaCode);
+                const parsed = parseSinaResponse(sinaCode, raw);
+
+                if (parsed) {
+                    // Normalize keys to match "relevantData" above
+                    const relevantData = {
+                        symbol: parsed.symbol,
+                        shortName: parsed.shortName,
+                        price: parsed.regularMarketPrice,
+                        currency: parsed.currency,
+                        change: parsed.regularMarketChange,
+                        changePercent: parsed.regularMarketChangePercent,
+                        high: parsed.regularMarketDayHigh,
+                        low: parsed.regularMarketDayLow,
+                        source: "Sina Finance (Fallback)"
+                        // marketCap missing in simple sina api
+                    };
+                    console.log(`[Stock] Sina success for ${sinaCode}`);
+                    return {
+                        content: [{ type: "text" as const, text: JSON.stringify(relevantData, null, 2) }]
+                    };
+                } else {
+                    console.warn(`[Stock] Sina parsed null for ${sinaCode}`);
+                }
+            } catch (sinaError: any) {
+                console.error(`[Stock] Sina failed for ${sinaCode}:`, sinaError.message);
+            }
+        } else {
+            console.warn(`[Stock] No Sina code mapping for ${args.symbol}`);
+        }
+
+        // If fallback fails, return error
         return {
-            content: [{ type: "text" as const, text: `Error fetching quote: ${error.message}. Please check if the symbol is correct.` }],
+            content: [{ type: "text" as const, text: `Error fetching quote: ${error.message}. Fallback also failed.` }],
             isError: true
         };
     }
@@ -62,16 +203,7 @@ export async function handleGetStockQuote(args: { symbol: string }) {
 
 export async function handleGetStockHistory(args: { symbol: string, period?: '1d' | '5d' | '1mo' | '3mo' | '6mo' | '1y' }) {
     const period = args.period || '1mo';
-    console.log(`[Chat Log] Stock History: ${args.symbol}, Period: ${period}`);
-
-    // Calculate start date based on period (approximate)
-    const queryOptions: any = { period1: period }; // yahoo-finance2 supports string intervals like '1mo' for queryOptions? 
-    // Actually, 'historical' uses period1 and period2, or simplified args.
-    // Let's use `chart` or `historical`. `historical` is better.
-    // yahoo-finance2 historical(symbol, queryOptions)
-
-    // Mapping period string to start date logic might be complex. 
-    // The library supports `period1` as a date.
+    console.log(`[Stock] History: ${args.symbol}, Period: ${period}`);
 
     const now = new Date();
     let startDate = new Date();
@@ -87,12 +219,10 @@ export async function handleGetStockHistory(args: { symbol: string, period?: '1d
 
     try {
         const result = await yahooFinance.historical(args.symbol, {
-            period1: startDate.toISOString().split('T')[0], // YYYY-MM-DD
+            period1: startDate.toISOString().split('T')[0],
             period2: now.toISOString().split('T')[0]
         });
 
-        // Limit data points to avoid token overflow
-        // If getting 1y data, maybe sample it? Or just return simpler format.
         const formatted = (result as any[]).map((day: any) => ({
             date: day.date.toISOString().split('T')[0],
             open: day.open,

@@ -132,7 +132,7 @@ export class UserService {
 
         try {
             await transporter.sendMail({
-                from: `"Xiaozhi Admin" <${process.env.EMAIL_USER}>`,
+                from: `"Xiaocai Admin" <${process.env.EMAIL_USER}>`,
                 to: email,
                 subject: subject,
                 text: text,

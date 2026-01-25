@@ -20,7 +20,7 @@ async function checkReports() {
     try {
         console.log("Fetching latest 20 reports from API...");
         const response = await axios.post(
-            'https://m.fckvip.cn//api/words/getWords?pageSize=20',
+            'https://m.fckvip.cn//api/words/getWords?pageSize=200',
             {},
             { headers: { 'Content-Type': 'application/json' } }
         );

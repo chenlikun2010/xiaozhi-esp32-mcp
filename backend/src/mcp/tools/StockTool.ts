@@ -1,5 +1,12 @@
 import YahooFinance from 'yahoo-finance2';
-const yahooFinance = new YahooFinance();
+const yahooFinance = new YahooFinance({
+    suppressNotices: ['yahooSurvey'],
+    // Attempt to set a browser-like User-Agent via internal module options if exposed, 
+    // or just rely on default. Recent versions allow more config.
+});
+// Force User-Agent override if possible or known workaround
+// @ts-ignore
+yahooFinance._opts = { ...yahooFinance._opts, headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' } };
 import { z } from 'zod';
 
 // --- Tool Definitions ---

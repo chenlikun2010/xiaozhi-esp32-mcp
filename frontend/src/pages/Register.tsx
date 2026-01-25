@@ -12,6 +12,7 @@ export default function Register() {
     const [error, setError] = useState('');
     const [verificationCode, setVerificationCode] = useState('');
     const [countdown, setCountdown] = useState(0);
+    const [sending, setSending] = useState(false);
     const navigate = useNavigate();
 
     const handleSendCode = async () => {
@@ -20,7 +21,9 @@ export default function Register() {
             return;
         }
         try {
+            setSending(true);
             await axios.post('/api/send-verification-code', { email, type: 'register' });
+            setSending(false);
             setCountdown(60);
             const timer = setInterval(() => {
                 setCountdown(prev => {
@@ -33,6 +36,7 @@ export default function Register() {
             }, 1000);
             alert("验证码已发送");
         } catch (err: any) {
+            setSending(false);
             setError(err.response?.data?.message || '发送失败');
         }
     };
@@ -72,10 +76,10 @@ export default function Register() {
                                 type="button"
                                 variant="outline"
                                 onClick={handleSendCode}
-                                disabled={countdown > 0}
+                                disabled={countdown > 0 || sending}
                                 className="w-32 shrink-0"
                             >
-                                {countdown > 0 ? `${countdown}s` : '发送验证码'}
+                                {countdown > 0 ? `${countdown}s` : (sending ? '发送中...' : '发送验证码')}
                             </Button>
                         </div>
                         <Input

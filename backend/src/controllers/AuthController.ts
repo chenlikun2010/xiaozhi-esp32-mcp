@@ -9,12 +9,12 @@ const JWT_SECRET = process.env.JWT_SECRET || 'xiaozhi-secret-key';
 export class AuthController {
     static async register(req: Request, res: Response) {
         try {
-            const { email, password, inviteCode } = req.body;
-            if (!email || !password) {
-                return res.status(400).json({ message: "Email and password are required" });
+            const { email, password, inviteCode, verificationCode } = req.body;
+            if (!email || !password || !verificationCode) {
+                return res.status(400).json({ message: "Email, password, and verification code are required" });
             }
 
-            const user = await userService.register(email, password, inviteCode);
+            const user = await userService.register(email, password, inviteCode, verificationCode);
             return res.status(201).json({
                 message: "User registered successfully",
                 user: {
@@ -108,6 +108,18 @@ export class AuthController {
             return res.status(400).json({ message: error.message });
         }
     }
+    static async sendVerificationCode(req: Request, res: Response) {
+        try {
+            const { email, type } = req.body; // type: 'register' | 'reset'
+            if (!email) return res.status(400).json({ message: "Email is required" });
+
+            await userService.sendVerificationCode(email, type || 'reset');
+            return res.json({ message: "Verification code sent" });
+        } catch (error: any) {
+            return res.status(400).json({ message: error.message });
+        }
+    }
+
     static async activate(req: Request, res: Response) {
         try {
             const { code } = req.body;

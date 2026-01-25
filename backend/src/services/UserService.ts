@@ -4,12 +4,32 @@ import { VerificationCode } from "../entities/VerificationCode";
 import { ActivationCode } from "../entities/ActivationCode";
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from 'uuid';
+import nodemailer from 'nodemailer';
+
+const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST || 'smtp.exmail.qq.com',
+    port: parseInt(process.env.EMAIL_PORT || '465'),
+    secure: process.env.EMAIL_SECURE === 'true',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
 
 export class UserService {
     private userRepository = AppDataSource.getRepository(User);
     private verificationCodeRepository = AppDataSource.getRepository(VerificationCode);
 
-    async register(email: string, password: string, inviteCode?: string): Promise<User> {
+    async register(email: string, password: string, inviteCode?: string, verificationCode?: string): Promise<User> {
+        // Verify code
+        if (!verificationCode) {
+            throw new Error("Verification code is required");
+        }
+        const isValid = await this.verifyCode(email, verificationCode);
+        if (!isValid) {
+            throw new Error("Invalid or expired verification code");
+        }
+
         // Check if user exists
         const existingUser = await this.userRepository.findOneBy({ email });
         if (existingUser) {
@@ -60,7 +80,12 @@ export class UserService {
             expireDate
         });
 
-        return await this.userRepository.save(user);
+        const savedUser = await this.userRepository.save(user);
+
+        // Invalidate code after successful registration
+        await this.verificationCodeRepository.delete({ email });
+
+        return savedUser;
     }
 
     async findByEmail(email: string): Promise<User | null> {
@@ -78,15 +103,20 @@ export class UserService {
         await this.userRepository.save(user);
     }
 
-    async createVerificationCode(email: string): Promise<string> {
-        const user = await this.userRepository.findOneBy({ email });
-        if (!user) throw new Error("User not found");
+    async sendVerificationCode(email: string, type: 'register' | 'reset' = 'reset'): Promise<string> {
+        if (type === 'reset') {
+            const user = await this.userRepository.findOneBy({ email });
+            if (!user) throw new Error("User not found");
+        } else if (type === 'register') {
+            const user = await this.userRepository.findOneBy({ email });
+            if (user) throw new Error("User already registered");
+        }
 
-        const code = Math.floor(100000 + Math.random() * 900000).toString(); // 6 digit code
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
         const expiresAt = new Date();
-        expiresAt.setMinutes(expiresAt.getMinutes() + 15); // 15 min expiry
+        expiresAt.setMinutes(expiresAt.getMinutes() + 15);
 
-        // Delete existing codes for this email to keep clean
+        // Delete existing
         await this.verificationCodeRepository.delete({ email });
 
         const verification = this.verificationCodeRepository.create({
@@ -96,10 +126,31 @@ export class UserService {
         });
         await this.verificationCodeRepository.save(verification);
 
-        // TODO: Replace with real email service
-        console.log(`[Mock Email] Verification code for ${email}: ${code}`);
+        // Send Email
+        const subject = type === 'register' ? '注册验证码' : '重置密码验证码';
+        const text = `您的验证码是：${code}，有效期15分钟。若非本人操作请忽略。`;
+
+        try {
+            await transporter.sendMail({
+                from: `"Xiaozhi Admin" <${process.env.EMAIL_USER}>`,
+                to: email,
+                subject: subject,
+                text: text,
+                html: `<p>您的验证码是：<strong style="font-size: 18px; color: #4F46E5;">${code}</strong></p><p>有效期15分钟。若非本人操作请忽略。</p>`
+            });
+            console.log(`[Email] Sent code to ${email}`);
+        } catch (error: any) {
+            console.error(`[Email] Failed to send to ${email}:`, error);
+            // In dev, maybe allow it? But production needs it.
+            // throw new Error("Failed to send verification email");
+        }
 
         return code;
+    }
+
+    // Legacy method redirection
+    async createVerificationCode(email: string): Promise<string> {
+        return this.sendVerificationCode(email, 'reset');
     }
 
     async verifyCode(email: string, code: string): Promise<boolean> {

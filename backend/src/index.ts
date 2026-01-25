@@ -23,6 +23,7 @@ import { authMiddleware } from './middleware/auth';
 
 // Routes
 app.post('/register', AuthController.register);
+app.post('/send-verification-code', AuthController.sendVerificationCode);
 app.post('/login', AuthController.login);
 app.post('/change-password', authMiddleware, AuthController.changePassword);
 app.post('/forgot-password', AuthController.requestPasswordReset);

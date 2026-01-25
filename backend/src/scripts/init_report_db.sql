@@ -20,10 +20,12 @@ CREATE TABLE IF NOT EXISTS report_embeddings (
     id SERIAL PRIMARY KEY,
     report_id INTEGER REFERENCES reports(id) ON DELETE CASCADE,
     content TEXT,
-    embedding vector(1024), -- BGE-M3 dimension
+    embedding vector(2560), -- Qwen/Qwen3-Embedding-4B dimension
     chunk_index INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create index for faster vector search
-CREATE INDEX IF NOT EXISTS report_embeddings_embedding_idx ON report_embeddings USING hnsw (embedding vector_cosine_ops);
+-- Note: 2560 embedding might exceed HNSW max dimension (2000) on some builds.
+-- Using exact search for now, or ensure pgvector is built with large dim support.
+-- CREATE INDEX IF NOT EXISTS report_embeddings_embedding_idx ON report_embeddings USING hnsw (embedding vector_cosine_ops);

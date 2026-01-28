@@ -76,7 +76,7 @@ export class XiaozhiMCPServer {
             this.registerCookTool();
         } else if (this.serviceName.includes("MBTI") || this.serviceName.includes("性格测试")) {
             this.registerMbtiTools();
-        } else if (this.serviceName.includes("股票")) {
+        } else if (this.serviceName.includes("股票") || this.serviceName.includes("Stock")) {
             this.registerStockTools();
         } else if (this.serviceName.includes("汇率")) {
             this.registerExchangeTools();

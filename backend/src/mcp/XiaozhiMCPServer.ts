@@ -176,7 +176,14 @@ export class XiaozhiMCPServer {
                         return this.wrapHandler(async (a) => {
                             const callResult = await client.callTool({
                                 name: tool.name,
-                                arguments: a
+                                arguments: (() => {
+                                    // Fix common argument issues for Flight tools
+                                    if (tool.name === 'searchFlightsByNumber') {
+                                        if (a.flightNumber && !a.fnum) a.fnum = a.flightNumber;
+                                        if (a.flight_number && !a.fnum) a.fnum = a.flight_number;
+                                    }
+                                    return a;
+                                })()
                             });
                             return callResult;
                         }, args, tool.name);

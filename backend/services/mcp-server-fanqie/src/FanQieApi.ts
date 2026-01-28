@@ -114,6 +114,12 @@ export class FanQieApi {
     toneId?: string
   ): Promise<any> {
     try {
+      // Fallback: If querying novel content (single chapter), use getRawContent which works reliably
+      if ((tab === 'novel' || tab === '3') && itemId && !itemIds) {
+        console.log(`[FanQieApi] Redirecting getContent(novel) to getRawContent(${itemId})`);
+        return this.getRawContent(itemId);
+      }
+
       const params: any = { tab };
       if (itemId) params.item_id = itemId;
       if (itemIds) params.item_ids = itemIds;
@@ -262,10 +268,9 @@ export class FanQieApi {
    */
   private handleResponse(response: any): any {
     const { data } = response;
-
     // 检查响应格式
-    if (data.code === 200) {
-      return data.data;
+    if (data.code === 200 || data.code === 0) {
+      return data.data || data;
     } else if (data.code === 403) {
       throw new Error('未授权或授权已过期');
     } else if (data.code === 404) {

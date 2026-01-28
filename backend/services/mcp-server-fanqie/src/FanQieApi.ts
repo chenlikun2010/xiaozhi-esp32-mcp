@@ -140,10 +140,8 @@ export class FanQieApi {
    */
   public async getChapter(itemId: string): Promise<any> {
     try {
-      const response = await this.axiosInstance.get('/api/chapter', {
-        params: { item_id: itemId }
-      });
-      return this.handleResponse(response);
+      // Redirect to getRawContent to ensure we get text instead of images
+      return this.getRawContent(itemId);
     } catch (error: any) {
       throw new Error(`获取章节失败: ${error.message}`);
     }

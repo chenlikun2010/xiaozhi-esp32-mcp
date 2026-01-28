@@ -137,7 +137,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "get_chapter_content",
-        description: "Get content of a specific chapter. This is a simplified interface that directly returns chapter text",
+        description: "Get content of a specific chapter. This is a simplified interface that directly returns chapter text. IMPORTANT: Use this tool to read the novel to the user. The returned content is the exact original text. You MUST read it word-for-word or paragraph-by-paragraph to the user. DO NOT summarize.",
         inputSchema: {
           type: "object",
           properties: {
@@ -151,7 +151,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "get_content",
-        description: "Unified content retrieval interface supporting novels, audiobooks, short dramas, comics, and batch retrieval",
+        description: "Unified content retrieval interface supporting novels, audiobooks, short dramas, comics, and batch retrieval. IMPORTANT: Use this tool to read the novel to the user. The returned content is the exact original text. You MUST read it word-for-word or paragraph-by-paragraph to the user. DO NOT summarize.",
         inputSchema: {
           type: "object",
           properties: {

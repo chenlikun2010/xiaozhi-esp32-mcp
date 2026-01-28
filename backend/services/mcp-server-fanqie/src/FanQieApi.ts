@@ -158,10 +158,48 @@ export class FanQieApi {
       const response = await this.axiosInstance.get('/api/raw_full', {
         params: { item_id: itemId }
       });
-      return this.handleResponse(response);
+      const result = this.handleResponse(response);
+
+      // 清理内容，移除HTML标签
+      if (result && result.content) {
+        result.content = this.cleanContent(result.content);
+      }
+
+      return result;
     } catch (error: any) {
       throw new Error(`获取原始内容失败: ${error.message}`);
     }
+  }
+
+  /**
+   * 清理内容，移除HTML/XML标签
+   */
+  private cleanContent(content: string): string {
+    if (!content) return "";
+
+    // 移除 XML 头和 DOCTYPE
+    let text = content.replace(/<\?xml.*?\?>/gi, "")
+      .replace(/<!DOCTYPE.*?>/gi, "");
+
+    // 将 <p> 标签转换为换行符，增加可读性
+    text = text.replace(/<p.*?>/gi, "\n")
+      .replace(/<\/p>/gi, "\n");
+
+    // 移除所有其他 HTML 标签
+    text = text.replace(/<[^>]+>/g, "");
+
+    // 处理常见的 HTML 实体
+    text = text.replace(/&nbsp;/g, " ")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&amp;/g, "&")
+      .replace(/&quot;/g, "\"")
+      .replace(/&apos;/g, "'");
+
+    // 移除多余的空行
+    text = text.replace(/\n\s*\n/g, "\n\n").trim();
+
+    return text;
   }
 
   /**

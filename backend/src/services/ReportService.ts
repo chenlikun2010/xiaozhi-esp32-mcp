@@ -230,7 +230,7 @@ export class ReportService {
     public static async generateAnswer(query: string, context: SearchResult[]): Promise<string> {
         try {
             const contextText = context.map((r, i) =>
-                `[${i + 1}] Title: ${r.title}\n   Date: ${r.publish_time}\n   URL: ${r.word_url}\n   Content: ${r.content}`
+                `[${i + 1}] ID: ${r.id}\n   Title: ${r.title}\n   Date: ${r.publish_time}\n   URL: ${r.word_url}\n   Content: ${r.content}`
             ).join('\n\n');
 
             const prompt = `You are an expert industry analyst (report_expert). 

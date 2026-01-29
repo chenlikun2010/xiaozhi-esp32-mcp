@@ -42,15 +42,20 @@ const debugEarlyEd = async () => {
         // 3. Test Full Content Fetch (if we found an ID)
         if (searchResults.length > 0) {
             const topReport = searchResults[0];
-            console.log(`\n3. Fetching Content for Report ID: ${topReport.id} ("${topReport.title}")...`);
+            console.log(`\n3. Searching Content WITHIN Report ID: ${topReport.id} ("${topReport.title}")...`);
+            console.log(`   Query: "${query}"`);
 
-            const content = await ReportService.getReportContentById(topReport.id);
-            console.log(`   Retrieved ${content.length} chunks.`);
+            // Use the NEW method: searchInReport
+            const content = await ReportService.searchInReport(topReport.id, query, 10);
+            console.log(`   Retrieved ${content.length} chunks (Limit 10).`);
+
             if (content.length === 0) {
-                console.error("   [FAIL] getReportContentById returned 0 chunks. Parsing might have failed for this PDF.");
+                console.error("   [FAIL] searchInReport returned 0 chunks.");
             } else {
-                console.log("   [PASS] Content retrieved successfully.");
-                console.log("   Preview:", content[0].content.substring(0, 100));
+                console.log("   [PASS] Relevant content retrieved successfully.");
+                content.forEach((c, i) => {
+                    console.log(`   [${i + 1}] (Sim: ${c.similarity.toFixed(4)}) ${c.content.substring(0, 50)}...`);
+                });
             }
         }
 

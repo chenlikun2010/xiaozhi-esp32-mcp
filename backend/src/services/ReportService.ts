@@ -129,6 +129,48 @@ export class ReportService {
         }
     }
     /**
+     * Search for relevant chunks WITHIN a specific report
+     */
+    public static async searchInReport(reportId: number, query: string, limit: number = 20): Promise<SearchResult[]> {
+        try {
+            // 1. Get embedding for the query
+            const embedding = await this.getEmbedding(query);
+            const embeddingStr = `[${embedding.join(',')}]`;
+
+            // 2. Perform vector search constrained by report_id
+            const sql = `
+                SELECT 
+                    r.id, 
+                    r.title, 
+                    r.word_url, 
+                    re.content, 
+                    r.publish_time,
+                    1 - (re.embedding <=> $1::vector) as similarity
+                FROM report_embeddings re
+                JOIN reports r ON r.id = re.report_id
+                WHERE re.report_id = $2
+                ORDER BY re.embedding <=> $1::vector ASC
+                LIMIT $3
+            `;
+
+            const result = await pool.query(sql, [embeddingStr, reportId, limit]);
+
+            return result.rows.map((row: any) => ({
+                id: row.id,
+                title: row.title,
+                word_url: row.word_url,
+                content: row.content,
+                similarity: parseFloat(row.similarity),
+                publish_time: row.publish_time
+            }));
+
+        } catch (error: any) {
+            console.error('[ReportService] Search in report error:', error);
+            throw error;
+        }
+    }
+
+    /**
      * Search external API for reports and add to database
      * Returns the number of new reports added
      */
@@ -255,6 +297,7 @@ Please summarize the information to answer the user's query.
             // Define model to use
             const chatModel = "Qwen/Qwen2.5-72B-Instruct";
             console.log(`[ReportService] Sending request to LLM (Model: ${chatModel})...`);
+            const startTime = Date.now();
 
             const response = await axios.post(
                 `${config.siliconflow.baseUrl}/chat/completions`,
@@ -275,6 +318,9 @@ Please summarize the information to answer the user's query.
                     timeout: 120000 // 120s timeout for generation (increased from 30s)
                 }
             );
+
+            const duration = (Date.now() - startTime) / 1000;
+            console.log(`[ReportService] LLM Response received in ${duration.toFixed(2)}s`);
 
             const data = response.data as any;
             if (data.choices && data.choices.length > 0) {

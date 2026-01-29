@@ -12,6 +12,7 @@ export const ReportExpertDefinition = {
 
 export async function handleReportExpert(args: any) {
     const { query, reportId } = args;
+    const startTime = Date.now();
     console.log(`[Report Expert] Received request: query="${query}", reportId=${reportId}`);
     try {
         let results;
@@ -38,6 +39,7 @@ export async function handleReportExpert(args: any) {
         if (results.length > 0) {
             console.log(`[Report Expert] Found ${results.length} chunks for context.`);
             const answer = await ReportService.generateAnswer(query, results);
+            console.log(`[Report Expert] Completed in ${((Date.now() - startTime) / 1000).toFixed(2)}s`);
             return {
                 content: [{
                     type: "text",
@@ -69,7 +71,7 @@ export async function handleReportExpert(args: any) {
         };
 
     } catch (error: any) {
-        console.error(`[Report Expert] Error:`, error);
+        console.error(`[Report Expert] Error (took ${((Date.now() - startTime) / 1000).toFixed(2)}s):`, error);
         return {
             content: [{
                 type: "text",

@@ -229,11 +229,15 @@ export class ReportService {
      */
     public static async generateAnswer(query: string, context: SearchResult[]): Promise<string> {
         try {
-            const contextText = context.map((r, i) =>
+            // Truncate context if too large (max 50 chunks or ~30k chars)
+            const MAX_CHUNKS = 50;
+            const effectiveContext = context.slice(0, MAX_CHUNKS);
+
+            const contextText = effectiveContext.map((r, i) =>
                 `[${i + 1}] ID: ${r.id}\n   Title: ${r.title}\n   Date: ${r.publish_time}\n   URL: ${r.word_url}\n   Content: ${r.content}`
             ).join('\n\n');
 
-            console.log(`[ReportService] Constructed Context with ${context.length} items. Total char length: ${contextText.length}`);
+            console.log(`[ReportService] Constructed Context with ${effectiveContext.length} items (Original: ${context.length}). Total char length: ${contextText.length}`);
 
             const prompt = `You are an expert industry analyst (report_expert). 
 User Query: "${query}"
@@ -248,7 +252,9 @@ Please summarize the information to answer the user's query.
 - If the context is not sufficient, admit it.
 - Answer in Chinese (Standard Mandarin).`;
 
-            console.log(`[ReportService] Sending request to LLM (Model: ${config.siliconflow.model})...`);
+            // Define model to use
+            const chatModel = "Qwen/Qwen2.5-72B-Instruct";
+            console.log(`[ReportService] Sending request to LLM (Model: ${chatModel})...`);
 
             const response = await axios.post(
                 `${config.siliconflow.baseUrl}/chat/completions`,
@@ -266,7 +272,7 @@ Please summarize the information to answer the user's query.
                         'Authorization': `Bearer ${config.siliconflow.apiKey}`,
                         'Content-Type': 'application/json'
                     },
-                    timeout: 30000 // 30s timeout for generation
+                    timeout: 120000 // 120s timeout for generation (increased from 30s)
                 }
             );
 

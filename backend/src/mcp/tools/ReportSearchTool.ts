@@ -25,7 +25,7 @@ export async function handleSearchReports(args: any) {
         }
 
         const reportTexts = results.map(r =>
-            `Title: ${r.title}\nPublish Time: ${r.publish_time ? new Date(r.publish_time).toLocaleDateString() : 'Unknown'}\nSimilarity: ${(r.similarity * 100).toFixed(1)}%\nURL: ${r.word_url}\nContent Snippet: ${r.content}\n`
+            `ID: ${r.id}\nTitle: ${r.title}\nPublish Time: ${r.publish_time ? new Date(r.publish_time).toLocaleDateString() : 'Unknown'}\nSimilarity: ${(r.similarity * 100).toFixed(1)}%\nURL: ${r.word_url}\nContent Snippet: ${r.content}\n`
         ).join("\n---\n");
 
         return {

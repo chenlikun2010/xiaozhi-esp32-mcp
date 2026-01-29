@@ -190,6 +190,41 @@ export class ReportService {
     }
 
     /**
+     * Get full content of a report by ID
+     */
+    public static async getReportContentById(reportId: number): Promise<SearchResult[]> {
+        try {
+            const sql = `
+                SELECT 
+                    r.id, 
+                    r.title, 
+                    r.word_url, 
+                    re.content, 
+                    r.publish_time,
+                    1.0 as similarity
+                FROM report_embeddings re
+                JOIN reports r ON r.id = re.report_id
+                WHERE r.id = $1
+                ORDER BY re.id ASC
+            `;
+
+            const result = await pool.query(sql, [reportId]);
+
+            return result.rows.map((row: any) => ({
+                id: row.id,
+                title: row.title,
+                word_url: row.word_url,
+                content: row.content,
+                similarity: parseFloat(row.similarity),
+                publish_time: row.publish_time
+            }));
+        } catch (error: any) {
+            console.error('[ReportService] Get content error:', error);
+            throw error;
+        }
+    }
+
+    /**
      * Generate answer using SiliconFlow LLM
      */
     public static async generateAnswer(query: string, context: SearchResult[]): Promise<string> {

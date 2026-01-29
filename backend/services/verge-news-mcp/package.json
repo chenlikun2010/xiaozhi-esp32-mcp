@@ -22,11 +22,13 @@
   "license": "ISC",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.6.0",
+    "pdf-parse": "^1.1.1",
     "rss-parser": "^3.13.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/node": "^22.13.5",
+    "@types/pdf-parse": "^1.1.5",
     "tsx": "^4.20.5",
     "typescript": "^5.7.3"
   }

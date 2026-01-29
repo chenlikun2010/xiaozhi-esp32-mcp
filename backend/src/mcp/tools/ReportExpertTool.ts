@@ -10,10 +10,19 @@ export const ReportExpertDefinition = {
     }
 };
 
-export async function handleReportExpert(args: any) {
+export async function handleReportExpert(args: any, extra?: any) {
     const { query, reportId } = args;
     const startTime = Date.now();
     console.log(`[Report Expert] Received request: query="${query}", reportId=${reportId}`);
+
+    // Notify user that processing has started
+    if (extra && extra.sendLoggingMessage) {
+        extra.sendLoggingMessage({
+            level: "info",
+            data: "正在查询并总结报告内容，这可能需要几十秒钟，请您伸个懒腰放松一下...(Querying and summarizing, please relax...)"
+        }).catch((err: any) => console.error("Failed to send logging message:", err));
+    }
+
     try {
         let results;
 

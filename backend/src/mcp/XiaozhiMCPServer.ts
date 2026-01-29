@@ -37,7 +37,7 @@ export class XiaozhiMCPServer {
         this.transport = new WebSocketClientTransport(wssUrl);
     }
 
-    private async wrapHandler(handler: (args: any) => Promise<any>, args: any, toolName: string) {
+    private async wrapHandler(handler: (args: any, extra?: any) => Promise<any>, args: any, toolName: string) {
         console.log(`[MCP] Request ${toolName} args:`, JSON.stringify(args));
         if (this.checkExpiry) {
             const isExpired = await this.checkExpiry();
@@ -52,8 +52,16 @@ export class XiaozhiMCPServer {
                 };
             }
         }
+
+        // Context object to pass to tools
+        const extra = {
+            sendLoggingMessage: (params: { level: "debug" | "info" | "notice" | "warning" | "error" | "critical" | "alert" | "emergency", data: unknown }) => {
+                return this.server.sendLoggingMessage(params);
+            }
+        };
+
         try {
-            const result = await handler(args);
+            const result = await handler(args, extra);
             console.log(`[MCP] Result ${toolName}:`, JSON.stringify(result).substring(0, 200) + "...");
             return result;
         } catch (error: any) {

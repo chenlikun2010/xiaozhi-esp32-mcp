@@ -12,6 +12,7 @@ export const ReportExpertDefinition = {
 
 export async function handleReportExpert(args: any) {
     const { query, reportId } = args;
+    console.log(`[Report Expert] Received request: query="${query}", reportId=${reportId}`);
     try {
         let results;
 

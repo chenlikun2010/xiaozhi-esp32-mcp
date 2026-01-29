@@ -233,6 +233,8 @@ export class ReportService {
                 `[${i + 1}] ID: ${r.id}\n   Title: ${r.title}\n   Date: ${r.publish_time}\n   URL: ${r.word_url}\n   Content: ${r.content}`
             ).join('\n\n');
 
+            console.log(`[ReportService] Constructed Context with ${context.length} items. Total char length: ${contextText.length}`);
+
             const prompt = `You are an expert industry analyst (report_expert). 
 User Query: "${query}"
 
@@ -245,6 +247,8 @@ Please summarize the information to answer the user's query.
 - Cite the report titles as sources e.g. [1].
 - If the context is not sufficient, admit it.
 - Answer in Chinese (Standard Mandarin).`;
+
+            console.log(`[ReportService] Sending request to LLM (Model: ${config.siliconflow.model})...`);
 
             const response = await axios.post(
                 `${config.siliconflow.baseUrl}/chat/completions`,

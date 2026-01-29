@@ -1,90 +1,81 @@
-
 import { Pool } from 'pg';
-import axios from 'axios';
 import 'dotenv/config';
 
-const config = {
-    postgres: {
-        host: process.env.POSTGRES_HOST!,
+// Script to check and reset report vectorization status
+const checkAndResetReport = async () => {
+    // Arg 1: Report ID or Keyword
+    const target = process.argv[2];
+    const reset = process.argv.includes('--reset');
+
+    if (!target) {
+        console.error("Usage: npx ts-node src/scripts/check_report_status.ts <reportId|keyword> [--reset]");
+        process.exit(1);
+    }
+
+    const pool = new Pool({
+        host: process.env.POSTGRES_HOST,
         port: parseInt(process.env.POSTGRES_PORT || '5432'),
-        user: process.env.POSTGRES_USER!,
-        password: process.env.POSTGRES_PASSWORD!,
-        database: process.env.POSTGRES_DB!,
-        schema: process.env.POSTGRES_SCHEMA || 'mcp',
-    },
-};
+        user: process.env.POSTGRES_USER,
+        password: process.env.POSTGRES_PASSWORD,
+        database: process.env.POSTGRES_DB,
+    });
 
-const pool = new Pool(config.postgres);
-
-async function checkReports() {
     try {
-        console.log("Fetching latest 20 reports from API...");
-        const response = await axios.post(
-            'https://m.fckvip.cn//api/words/getWords?pageSize=200',
-            {},
-            { headers: { 'Content-Type': 'application/json' } }
-        );
+        await pool.query(`SET search_path TO ${process.env.POSTGRES_SCHEMA || 'mcp'}, public`);
 
-        const data = response.data as any;
+        // 1. Find the report
+        let report;
+        if (!isNaN(parseInt(target))) {
+            const res = await pool.query('SELECT * FROM reports WHERE id = $1', [target]);
+            report = res.rows[0];
+        } else {
+            const res = await pool.query('SELECT * FROM reports WHERE title ILIKE $1 LIMIT 1', [`%${target}%`]);
+            report = res.rows[0];
+        }
 
-        if (data.result !== 200 || !data.data?.list) {
-            console.error("API Error:", data);
+        if (!report) {
+            console.error(`Status: [Not Found] Report matching "${target}" not found.`);
             return;
         }
 
-        const apiReports = data.data.list;
-        console.log(`API returned ${apiReports.length} reports.`);
+        console.log(`\n=== Report Analysis: ${report.title} (ID: ${report.id}) ===`);
+        console.log(`Current Status: ${report.status}`);
+        console.log(`URL: ${report.word_url}`);
+        console.log(`Publish Time: ${report.publish_time}`);
 
-        const client = await pool.connect();
-        try {
-            await client.query(`SET search_path TO ${config.postgres.schema}, public`);
+        // 2. Check Embeddings
+        const embRes = await pool.query('SELECT count(*) as count FROM report_embeddings WHERE report_id = $1', [report.id]);
+        const chunkCount = parseInt(embRes.rows[0].count);
+        console.log(`Vector Chunks: ${chunkCount}`);
 
-            let inDbCount = 0;
-            let completedCount = 0;
-
-            console.log("\nChecking Database Status:");
-            console.log("----------------------------------------");
-
-            for (const report of apiReports) {
-                const res = await client.query(
-                    'SELECT id, status FROM reports WHERE word_url = $1',
-                    [report.wordUrl]
-                );
-
-                const exists = res.rows.length > 0;
-                let status = "MISSING";
-
-                if (exists) {
-                    inDbCount++;
-                    status = res.rows[0].status;
-                    if (status === 'completed') completedCount++;
-                }
-
-                console.log(`[${status.padEnd(10)}] ${report.title.substring(0, 40)}...`);
-            }
-
-            console.log("----------------------------------------");
-            console.log(`Total Reports from API: ${apiReports.length}`);
-            console.log(`Found in DB: ${inDbCount}`);
-            console.log(`Vectorized (completed): ${completedCount}`);
-
-            if (inDbCount < apiReports.length) {
-                console.log(`\n${apiReports.length - inDbCount} reports are missing from the DB and need to be fetched.`);
-            } else if (completedCount < inDbCount) {
-                console.log(`\nAll reports are in DB, but ${inDbCount - completedCount} are still processing (pending/processing/failed).`);
-            } else {
-                console.log("\nAll 20 reports are successfully vectored in the database.");
-            }
-
-        } finally {
-            client.release();
+        // 3. Analysis
+        let needsReset = false;
+        if (chunkCount === 0) {
+            console.warn(`[WARN] No vector embeddings found! Search will fail.`);
+            needsReset = true;
+        } else if (report.status !== 'completed' && report.status !== 'pending' && report.status !== 'processing') {
+            console.warn(`[WARN] Status is '${report.status}', which might be an error state.`);
+            needsReset = true;
+        } else {
+            console.log(`[PASS] Report appears to be properly vectorized.`);
         }
 
-    } catch (error) {
-        console.error("Error:", error);
+        // 4. Reset Action
+        if (reset) {
+            console.log(`\n[ACTION] Resetting status to 'pending' to trigger re-vectorization...`);
+            await pool.query("UPDATE reports SET status = 'pending', local_path = NULL WHERE id = $1", [report.id]);
+            // Also clear existing embeddings to be clean
+            await pool.query("DELETE FROM report_embeddings WHERE report_id = $1", [report.id]);
+            console.log(`[DONE] Report queued. The worker will pick it up shortly.`);
+        } else if (needsReset) {
+            console.log(`\n[TIP] Run with --reset to fix this report.`);
+        }
+
+    } catch (err) {
+        console.error("Error:", err);
     } finally {
         await pool.end();
     }
-}
+};
 
-checkReports();
+checkAndResetReport();

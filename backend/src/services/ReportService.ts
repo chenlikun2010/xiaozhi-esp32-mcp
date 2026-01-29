@@ -295,14 +295,14 @@ Please summarize the information to answer the user's query.
 - Answer in Chinese (Standard Mandarin).`;
 
             // Define model to use
-            const chatModel = "Qwen/Qwen2.5-72B-Instruct";
+            const chatModel = "Qwen/Qwen2.5-7B-Instruct";
             console.log(`[ReportService] Sending request to LLM (Model: ${chatModel})...`);
             const startTime = Date.now();
 
             const response = await axios.post(
                 `${config.siliconflow.baseUrl}/chat/completions`,
                 {
-                    model: "Qwen/Qwen2.5-72B-Instruct", // Use a high-quality model
+                    model: chatModel, // Use a high-quality model
                     messages: [
                         { role: "system", content: "You are a helpful assistant." },
                         { role: "user", content: prompt }

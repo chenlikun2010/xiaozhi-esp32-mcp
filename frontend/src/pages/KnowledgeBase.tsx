@@ -1,335 +1,246 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import Layout from '../components/Layout';
+import { cn } from '../lib/utils';
 
 interface KnowledgeFile {
-    id: number;
-    file_name: string;
-    file_type: string;
-    file_size: number;
-    status: 'pending' | 'parsing' | 'processing' | 'completed' | 'failed';
-    chunk_count: number;
-    error_message?: string;
-    created_at: string;
+  id: number;
+  file_name: string;
+  file_type: string;
+  file_size: number;
+  status: 'pending' | 'parsing' | 'processing' | 'completed' | 'failed';
+  chunk_count: number;
+  error_message?: string;
+  created_at: string;
 }
-
-
 
 const API_BASE = '/api';
 
+function fileIcon(type: string) {
+  if (type === 'pdf') return '📕';
+  if (type === 'docx' || type === 'doc') return '📘';
+  if (type === 'pptx' || type === 'ppt') return '📙';
+  if (type === 'xlsx' || type === 'xls') return '📗';
+  if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(type)) return '🖼️';
+  return '📄';
+}
+
+function formatSize(bytes: number) {
+  if (!bytes) return '0 B';
+  const k = 1024, sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+const STATUS_LABEL: Record<string, string> = { pending: '等待中', parsing: '解析中', processing: '处理中', completed: '已完成', failed: '失败' };
+const STATUS_CLASS: Record<string, string> = {
+  pending: 'app-badge-pending', parsing: 'app-badge-processing', processing: 'app-badge-processing',
+  completed: 'app-badge-completed', failed: 'app-badge-failed',
+};
+
 export default function KnowledgeBase() {
-    const [files, setFiles] = useState<KnowledgeFile[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [uploading, setUploading] = useState(false);
-    const [dragActive, setDragActive] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+  const [files, setFiles] = useState<KnowledgeFile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-    // 获取文件列表
-    const fetchFiles = useCallback(async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`${API_BASE}/kb/list`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
-            const data = await response.json();
-            if (data.success) {
-                setFiles(data.data);
-            } else {
-                setError(data.error || 'Failed to fetch files');
-            }
-        } catch (err: any) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+  const fetchFiles = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/kb/list`, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if (data.success) setFiles(data.data);
+      else setError(data.error || '获取文件列表失败');
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
+  useEffect(() => { fetchFiles(); }, [fetchFiles]);
 
+  useEffect(() => {
+    const processing = files.filter(f => ['parsing', 'processing', 'pending'].includes(f.status));
+    if (processing.length > 0) {
+      const t = setInterval(fetchFiles, 5000);
+      return () => clearInterval(t);
+    }
+  }, [files, fetchFiles]);
 
-    // 初始加载
-    useEffect(() => {
-        fetchFiles();
-    }, [fetchFiles]);
+  const uploadFile = async (file: File) => {
+    setUploading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem('token');
+      const form = new FormData();
+      form.append('file', file);
+      const res = await fetch(`${API_BASE}/kb/upload`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form });
+      const data = await res.json();
+      if (data.success) fetchFiles();
+      else setError(data.error || '上传失败');
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setUploading(false);
+    }
+  };
 
-    // 轮询处理中的文件状态
-    useEffect(() => {
-        const processingFiles = files.filter(f =>
-            f.status === 'parsing' || f.status === 'processing' || f.status === 'pending'
-        );
+  const deleteFile = async (id: number) => {
+    if (!confirm('确定要删除这个文件吗？相关的向量数据也会被删除。')) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/kb/file/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if (data.success) fetchFiles();
+      else setError(data.error || '删除失败');
+    } catch (e: any) {
+      setError(e.message);
+    }
+  };
 
-        if (processingFiles.length > 0) {
-            const intervalId = setInterval(() => {
-                fetchFiles();
-            }, 5000);
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault(); e.stopPropagation();
+    setDragActive(e.type === 'dragenter' || e.type === 'dragover');
+  };
 
-            return () => clearInterval(intervalId);
-        }
-    }, [files, fetchFiles]);
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault(); e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files[0]) uploadFile(e.dataTransfer.files[0]);
+  };
 
-    // 上传文件
-    const uploadFile = async (file: File) => {
-        setUploading(true);
-        setError(null);
+  const completedCount = files.filter(f => f.status === 'completed').length;
 
-        try {
-            const token = localStorage.getItem('token');
-            const formData = new FormData();
-            formData.append('file', file);
+  return (
+    <Layout>
+      <div style={{ marginBottom: 28 }}>
+        <div className="app-page-tag">KNOWLEDGE BASE</div>
+        <h2 className="app-page-title">知识库</h2>
+        <div className="app-page-sub">上传文档，让 AI 助手检索您的私人知识</div>
+      </div>
 
-            const response = await fetch(`${API_BASE}/kb/upload`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: formData,
-            });
+      {/* Usage guide */}
+      <div className="app-info" style={{ marginBottom: 20 }}>
+        <div style={{ fontWeight: 600, color: '#00c8ff', marginBottom: 8, fontSize: 12 }}>// 使用说明</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {[
+            '步骤 1：在此页面上传文档（PDF、Word、Excel、PPT、TXT、图片等）',
+            '步骤 2：等待文档处理完成（状态变为「已完成」）',
+            '步骤 3：前往服务市场，添加「个人知识库助手」服务',
+            '步骤 4：粘贴机器人 WebSocket 地址，启动实例',
+            '步骤 5：在机器人中对话，即可智能检索您的文档内容',
+          ].map((s, i) => <div key={i}>{s}</div>)}
+        </div>
+        <div style={{ marginTop: 10, color: '#3d5a7a' }}>
+          当前已完成处理：<span style={{ color: '#00ff9d' }}>{completedCount}</span> 个文件
+        </div>
+      </div>
 
-            const data = await response.json();
-            if (data.success) {
-                fetchFiles(); // 刷新列表
-            } else {
-                setError(data.error || 'Upload failed');
-            }
-        } catch (err: any) {
-            setError(err.message);
-        } finally {
-            setUploading(false);
-        }
-    };
+      {/* Error */}
+      {error && (
+        <div className="app-error" style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>{error}</span>
+          <button onClick={() => setError(null)} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', opacity: .6 }}>✕</button>
+        </div>
+      )}
 
-    // 删除文件
-    const deleteFile = async (fileId: number) => {
-        if (!window.confirm('确定要删除这个文件吗？相关的向量数据也会被删除。')) {
-            return;
-        }
-
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`${API_BASE}/kb/file/${fileId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
-
-            const data = await response.json();
-            if (data.success) {
-                fetchFiles(); // 刷新列表
-            } else {
-                setError(data.error || 'Delete failed');
-            }
-        } catch (err: any) {
-            setError(err.message);
-        }
-    };
-
-    // 拖拽处理
-    const handleDrag = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (e.type === 'dragenter' || e.type === 'dragover') {
-            setDragActive(true);
-        } else if (e.type === 'dragleave') {
-            setDragActive(false);
-        }
-    };
-
-    const handleDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setDragActive(false);
-
-        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            uploadFile(e.dataTransfer.files[0]);
-        }
-    };
-
-    const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            uploadFile(e.target.files[0]);
-        }
-    };
-
-    // 格式化文件大小
-    const formatFileSize = (bytes: number) => {
-        if (bytes === 0) return '0 B';
-        const k = 1024;
-        const sizes = ['B', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    };
-
-    // 格式化日期
-    const formatDate = (dateStr: string) => {
-        return new Date(dateStr).toLocaleString('zh-CN');
-    };
-
-    // 状态标签
-    const StatusBadge = ({ status }: { status: string }) => {
-        const styles: Record<string, string> = {
-            pending: 'bg-gray-500',
-            parsing: 'bg-yellow-500',
-            processing: 'bg-blue-500',
-            completed: 'bg-green-500',
-            failed: 'bg-red-500',
-        };
-        const labels: Record<string, string> = {
-            pending: '等待中',
-            parsing: '解析中',
-            processing: '处理中',
-            completed: '已完成',
-            failed: '失败',
-        };
-        return (
-            <span className={`px-2 py-1 rounded text-white text-xs ${styles[status] || 'bg-gray-500'}`}>
-                {labels[status] || status}
-            </span>
-        );
-    };
-
-    return (
-        <Layout>
-            <div className="max-w-6xl mx-auto">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <span className="text-2xl">📚</span>
-                            知识库管理
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        {/* 错误提示 */}
-                        {error && (
-                            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
-                                {error}
-                                <button
-                                    className="ml-2 underline"
-                                    onClick={() => setError(null)}
-                                >
-                                    关闭
-                                </button>
-                            </div>
-                        )}
-
-                        {/* 使用说明 */}
-                        <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
-                            <div className="flex items-center gap-2 mb-3">
-                                <span className="text-xl">💡</span>
-                                <h3 className="text-lg font-medium text-gray-800">如何使用知识库</h3>
-                            </div>
-                            <div className="space-y-2 text-sm text-gray-700">
-                                <p><strong>步骤 1：</strong>在此页面上传您的文档（PDF、Word、Excel、PPT、TXT、图片 等）</p>
-                                <p><strong>步骤 2：</strong>等待文档处理完成（状态变为"已完成"）</p>
-                                <p><strong>步骤 3：</strong>前往 <a href="/marketplace" className="text-blue-600 underline hover:text-blue-800">服务市场</a>，添加"个人知识库助手"服务</p>
-                                <p><strong>步骤 4：</strong>粘贴您的机器人 WebSocket 地址，点击启动</p>
-                                <p><strong>步骤 5：</strong>在机器人中对话，即可智能检索您上传的文档内容！</p>
-                            </div>
-                            <p className="mt-3 text-xs text-gray-500">
-                                当前知识库共有 <strong>{files.filter(f => f.status === 'completed').length}</strong> 个已完成处理的文件。
-                            </p>
-                        </div>
-
-                        {/* 上传区域 */}
-                        <div
-                            className={`mb-6 border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer
-                            ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'}
-                            ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
-                            onDragEnter={handleDrag}
-                            onDragLeave={handleDrag}
-                            onDragOver={handleDrag}
-                            onDrop={handleDrop}
-                            onClick={() => document.getElementById('file-input')?.click()}
-                        >
-                            <input
-                                id="file-input"
-                                type="file"
-                                className="hidden"
-                                accept=".pdf,.doc,.docx,.txt,.md,.pptx,.ppt,.xlsx,.xls,.jpg,.jpeg,.png,.gif,.bmp,.webp"
-                                onChange={handleFileInput}
-                                disabled={uploading}
-                            />
-                            <div className="text-4xl mb-2">📄</div>
-                            <div className="text-lg font-medium text-gray-700">
-                                {uploading ? '上传中...' : '拖拽文件到这里，或点击选择文件'}
-                            </div>
-                            <div className="text-sm text-gray-500 mt-1">
-                                支持 PDF, Word, PowerPoint, Excel, TXT, Markdown, 图片
-                            </div>
-                        </div>
-
-                        {/* 文件列表 */}
-                        {loading ? (
-                            <div className="text-center py-8 text-gray-500">加载中...</div>
-                        ) : files.length === 0 ? (
-                            <div className="text-center py-8 text-gray-500">
-                                暂无文件，请上传您的知识库文档
-                            </div>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">文件名</th>
-                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">大小</th>
-                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">状态</th>
-                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">分片数</th>
-                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">上传时间</th>
-                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">操作</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-200">
-                                        {files.map((file) => (
-                                            <tr key={file.id} className="hover:bg-gray-50">
-                                                <td className="px-4 py-3">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-lg">
-                                                            {file.file_type === 'pdf' ? '📕' :
-                                                                file.file_type === 'docx' || file.file_type === 'doc' ? '📘' :
-                                                                    file.file_type === 'pptx' || file.file_type === 'ppt' ? '📙' :
-                                                                        file.file_type === 'xlsx' || file.file_type === 'xls' ? '📗' :
-                                                                            ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(file.file_type) ? '🖼️' : '📄'}
-                                                        </span>
-                                                        <span className="text-sm font-medium truncate max-w-xs" title={file.file_name}>
-                                                            {file.file_name}
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-4 py-3 text-sm text-gray-600">
-                                                    {formatFileSize(file.file_size)}
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    <StatusBadge status={file.status} />
-                                                    {file.status === 'failed' && file.error_message && (
-                                                        <span className="ml-2 text-xs text-red-500" title={file.error_message}>
-                                                            ⚠️
-                                                        </span>
-                                                    )}
-                                                </td>
-                                                <td className="px-4 py-3 text-sm text-gray-600">
-                                                    {file.chunk_count || '-'}
-                                                </td>
-                                                <td className="px-4 py-3 text-sm text-gray-600">
-                                                    {formatDate(file.created_at)}
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    <button
-                                                        className="text-red-500 hover:text-red-700 text-sm"
-                                                        onClick={() => deleteFile(file.id)}
-                                                    >
-                                                        🗑️ 删除
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+      {/* Drop zone */}
+      <div
+        className={cn('drop-zone', dragActive && 'active', uploading && 'disabled')}
+        style={{ marginBottom: 24 }}
+        onDragEnter={handleDrag}
+        onDragLeave={handleDrag}
+        onDragOver={handleDrag}
+        onDrop={handleDrop}
+        onClick={() => !uploading && document.getElementById('kb-file-input')?.click()}
+      >
+        <input
+          id="kb-file-input"
+          type="file"
+          style={{ display: 'none' }}
+          accept=".pdf,.doc,.docx,.txt,.md,.pptx,.ppt,.xlsx,.xls,.jpg,.jpeg,.png,.gif,.bmp,.webp"
+          onChange={e => e.target.files?.[0] && uploadFile(e.target.files[0])}
+          disabled={uploading}
+        />
+        {uploading ? (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><div className="app-spinner" /></div>
+            <div className="drop-zone-text">上传中...</div>
+          </>
+        ) : (
+          <>
+            <div className="drop-zone-icon">
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="rgba(0,200,255,0.4)" strokeWidth="1.5">
+                <path d="M16 22V10M10 16l6-6 6 6"/><rect x="4" y="22" width="24" height="6" rx="2"/>
+              </svg>
             </div>
-        </Layout>
-    );
+            <div className="drop-zone-text">拖拽文件到这里，或点击选择文件</div>
+            <div className="drop-zone-sub">支持 PDF · Word · PPT · Excel · TXT · Markdown · 图片</div>
+          </>
+        )}
+      </div>
+
+      {/* File list */}
+      {loading ? (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '48px 0' }}>
+          <div className="app-spinner" />
+        </div>
+      ) : files.length === 0 ? (
+        <div className="app-empty">
+          <div className="app-empty-icon">📂</div>
+          <div className="app-empty-title">知识库为空</div>
+          <div className="app-empty-desc">上传您的第一份文档，开始构建私人知识库</div>
+        </div>
+      ) : (
+        <div className="app-card" style={{ padding: 0, overflow: 'hidden' }}>
+          <table className="app-table">
+            <thead>
+              <tr>
+                <th>文件名</th>
+                <th>大小</th>
+                <th>状态</th>
+                <th>分片数</th>
+                <th>上传时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {files.map(file => (
+                <tr key={file.id}>
+                  <td className="primary">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span>{fileIcon(file.file_type)}</span>
+                      <span style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={file.file_name}>
+                        {file.file_name}
+                      </span>
+                    </div>
+                  </td>
+                  <td>{formatSize(file.file_size)}</td>
+                  <td>
+                    <span className={`app-badge ${STATUS_CLASS[file.status] || 'app-badge-stopped'}`}>
+                      {STATUS_LABEL[file.status] || file.status}
+                    </span>
+                    {file.status === 'failed' && file.error_message && (
+                      <span style={{ marginLeft: 6, fontSize: 11, color: '#ff6b6b' }} title={file.error_message}>⚠</span>
+                    )}
+                  </td>
+                  <td style={{ fontFamily: "'Share Tech Mono',monospace" }}>{file.chunk_count || '—'}</td>
+                  <td style={{ fontFamily: "'Share Tech Mono',monospace", fontSize: 11 }}>
+                    {new Date(file.created_at).toLocaleString('zh-CN')}
+                  </td>
+                  <td>
+                    <button className="app-btn app-btn-danger app-btn-sm" onClick={() => deleteFile(file.id)}>
+                      <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4h12M5 4V2h6v2M6 7v5M10 7v5M3 4l1 10h8l1-10H3z"/></svg>
+                      删除
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Layout>
+  );
 }

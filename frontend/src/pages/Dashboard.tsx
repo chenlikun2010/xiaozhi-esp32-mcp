@@ -1,260 +1,225 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '../components/ui/button';
-import { Card } from '../components/ui/card';
 import Layout from '../components/Layout';
-import { Plus, Play, Square, Trash2, Power, CreditCard, AlertTriangle } from 'lucide-react';
 import { cn, copyToClipboard } from '../lib/utils';
 import { ActivationModal } from '../components/ActivationModal';
 
-
 interface Instance {
-    id: number;
-    serviceId: number;
-    xiaozhiWssUrl: string;
-    status: string;
-    startTime?: string;
-    active: boolean;
-    service?: {
-        name: string;
-    };
+  id: number;
+  serviceId: number;
+  xiaozhiWssUrl: string;
+  status: string;
+  startTime?: string;
+  active: boolean;
+  service?: { name: string };
 }
 
 export default function Dashboard() {
-    const [instances, setInstances] = useState<Instance[]>([]);
-    const [loading, setLoading] = useState(true);
-    const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const [instances, setInstances] = useState<Instance[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showActivateModal, setShowActivateModal] = useState(false);
+  const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-    const [showActivateModal, setShowActivateModal] = useState(false);
+  const expireDate = user.expireDate ? new Date(user.expireDate) : null;
+  const isExpired = expireDate ? expireDate < new Date() : false;
 
-    // Check expiration
-    const expireDate = user.expireDate ? new Date(user.expireDate) : null;
-    const isExpired = expireDate ? expireDate < new Date() : false;
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    else navigate('/login');
+  }, [navigate]);
 
-    // Add token interceptor
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        } else {
-            navigate('/login');
-        }
-    }, [navigate]);
-
-    const fetchInstances = async () => {
-        try {
-            const res = await axios.get('/api/instances');
-            setInstances(res.data);
-            setLoading(false);
-        } catch (error) {
-            console.error("Failed to fetch instances:", error);
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        if (!isExpired) {
-            fetchInstances();
-            const interval = setInterval(fetchInstances, 5000); // Poll every 5s
-            return () => clearInterval(interval);
-        } else {
-            setLoading(false);
-        }
-    }, [isExpired]);
-
-    const handleStart = async (id: number) => {
-        try {
-            await axios.post(`/api/instances/${id}/start`);
-            fetchInstances();
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-    const handleStop = async (id: number) => {
-        try {
-            await axios.post(`/api/instances/${id}/stop`);
-            fetchInstances();
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-    const handleDelete = async (id: number) => {
-        if (!confirm("确定要删除这个实例吗？")) return;
-        try {
-            await axios.delete(`/api/instances/${id}`);
-            fetchInstances();
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-    if (isExpired) {
-        return (
-            <Layout>
-                <div className="mb-8">
-                    <h2 className="text-2xl md:text-3xl font-bold">欢迎回来, {user.email?.split('@')[0]}</h2>
-                </div>
-
-                <Card className="bg-[#1e293b] text-white border-0 p-8 min-h-[400px] flex flex-col">
-                    <h3 className="text-lg font-medium text-gray-300 mb-8">用户激活状态</h3>
-
-                    <div className="flex-1 flex flex-col justify-center items-start space-y-4">
-                        <div className="flex items-center text-red-400 gap-2 mb-2">
-                            <AlertTriangle className="h-5 w-5" />
-                            <span className="font-bold text-lg">试用期已过期</span>
-                        </div>
-
-                        <p className="text-gray-400">请购买激活时长继续使用服务</p>
-
-                        <p className="text-gray-500 text-sm">
-                            使用到期时间: {expireDate ? expireDate.toLocaleString() : 'N/A'}
-                        </p>
-                    </div>
-
-                    <div className="flex justify-center mt-8">
-                        <Button
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-8 py-6 text-lg"
-                            onClick={() => setShowActivateModal(true)}
-                        >
-                            <CreditCard className="mr-2 h-5 w-5" /> 购买激活时长
-                        </Button>
-                    </div>
-                </Card>
-
-                <ActivationModal
-                    isOpen={showActivateModal}
-                    onClose={() => setShowActivateModal(false)}
-                    onSuccess={() => window.location.reload()}
-                />
-            </Layout>
-        );
+  const fetchInstances = async () => {
+    try {
+      const res = await axios.get('/api/instances');
+      setInstances(res.data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    return (
-        <Layout>
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4">
-                <div>
-                    <h2 className="text-2xl md:text-3xl font-bold">仪表盘</h2>
-                    <p className="text-muted-foreground">
-                        欢迎回来, {user.email}
-                        <span className="ml-2 text-sm bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                            有效期至: {expireDate ? expireDate.toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
-                        </span>
-                    </p>
-                </div>
-                <div className="w-full md:w-auto flex flex-col md:flex-row gap-4">
-                    <Card
-                        className="p-3 md:p-4 bg-primary text-primary-foreground md:w-auto cursor-pointer hover:bg-primary/90 transition-colors"
-                        onClick={() => navigate('/invite-list')}
-                    >
-                        <div className="flex justify-between items-center gap-4">
-                            <span className="text-sm opacity-80">邀请新用户</span>
-                            <div className="flex items-center gap-2">
-                                <span className="text-lg md:text-xl font-mono font-bold tracking-wider">{user.inviteCode || 'N/A'}</span>
-                                <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">详情 &gt;</span>
-                            </div>
-                        </div>
-                    </Card>
-                    <Button className="w-full md:w-auto bg-white text-primary hover:bg-gray-100 border border-gray-200 shadow-sm" onClick={() => navigate('/marketplace')}>
-                        <Plus className="mr-2 h-4 w-4" /> 新增实例
-                    </Button>
-                </div>
+  useEffect(() => {
+    if (!isExpired) {
+      fetchInstances();
+      const t = setInterval(fetchInstances, 5000);
+      return () => clearInterval(t);
+    } else {
+      setLoading(false);
+    }
+  }, [isExpired]);
+
+  const handleStart = async (id: number) => {
+    try { await axios.post(`/api/instances/${id}/start`); fetchInstances(); } catch (e) { console.error(e); }
+  };
+  const handleStop = async (id: number) => {
+    try { await axios.post(`/api/instances/${id}/stop`); fetchInstances(); } catch (e) { console.error(e); }
+  };
+  const handleDelete = async (id: number) => {
+    if (!confirm('确定要删除这个实例吗？')) return;
+    try { await axios.delete(`/api/instances/${id}`); fetchInstances(); } catch (e) { console.error(e); }
+  };
+
+  return (
+    <Layout>
+      {/* Page header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28, flexWrap: 'wrap', gap: 16 }}>
+        <div>
+          <div className="app-page-tag">DASHBOARD</div>
+          <h2 className="app-page-title">我的实例</h2>
+          <div className="app-page-sub">
+            {user.email}
+            {expireDate && (
+              <span style={{ marginLeft: 12, color: isExpired ? '#ff6b6b' : 'rgba(0,200,255,0.6)' }}>
+                · 有效期至 {expireDate.toLocaleDateString('zh-CN')}
+              </span>
+            )}
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <button
+            className="app-btn app-btn-ghost"
+            onClick={() => navigate('/invite-list')}
+          >
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="6" cy="5" r="2.5"/><path d="M1 14c0-3 2-5 5-5"/><path d="M13 8v4M11 10h4"/></svg>
+            邀请码: {user.inviteCode || 'N/A'}
+          </button>
+          <button className="app-btn app-btn-primary" onClick={() => navigate('/marketplace')}>
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 3v10M3 8h10"/></svg>
+            新增实例
+          </button>
+        </div>
+      </div>
+
+      {/* Expired state */}
+      {isExpired && (
+        <div className="app-expire-banner">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff6b6b" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 600, color: '#ff6b6b', marginBottom: 4, fontSize: 14 }}>试用期已过期</div>
+            <div style={{ fontSize: 12, color: '#7ba3c8' }}>请购买激活时长以继续使用 MCP 服务</div>
+          </div>
+          <button className="app-btn app-btn-primary" onClick={() => setShowActivateModal(true)}>
+            购买激活时长
+          </button>
+        </div>
+      )}
+
+      {/* Loading */}
+      {loading && (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '64px 0' }}>
+          <div className="app-spinner" />
+        </div>
+      )}
+
+      {/* Instance grid */}
+      {!loading && !isExpired && (
+        <>
+          {instances.length === 0 ? (
+            <div className="app-empty">
+              <div className="app-empty-icon">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="rgba(0,200,255,0.3)" strokeWidth="1.5">
+                  <rect x="6" y="12" width="28" height="20" rx="2"/><path d="M14 12V9a6 6 0 0112 0v3"/><circle cx="20" cy="22" r="3"/>
+                </svg>
+              </div>
+              <div className="app-empty-title">暂无服务实例</div>
+              <div className="app-empty-desc">去服务市场挑选一个 MCP 服务，一键安装到您的小智设备</div>
+              <button className="app-btn app-btn-primary" onClick={() => navigate('/marketplace')}>前往服务市场</button>
             </div>
-
-            {/* Instance Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {loading && (
-                    <div className="col-span-full flex justify-center items-center p-12 h-64">
-                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-                    </div>
-                )}
-                {!loading && instances.map(instance => (
-                    <Card key={instance.id} className="flex flex-col overflow-hidden border-2 hover:border-primary/50 transition-colors">
-                        <div className="p-6 flex-1">
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="p-3 bg-primary/10 rounded-xl">
-                                    <Power className={cn("h-8 w-8", instance.active ? "text-green-600" : "text-gray-400")} />
-                                </div>
-                                <div className={cn("px-3 py-1 rounded-full text-sm font-bold border",
-                                    instance.status === 'running' ? 'bg-green-50 text-green-700 border-green-200' :
-                                        instance.status === 'error' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-gray-50 text-gray-600 border-gray-200')}>
-                                    {instance.status === 'running' ? '运行中' :
-                                        instance.status === 'error' ? '异常' : '已停止'}
-                                </div>
-                            </div>
-
-                            <h3 className="font-bold text-xl mb-1 line-clamp-1" title={instance.service ? instance.service.name : `MCP 服务 #${instance.serviceId}`}>
-                                {instance.service ? instance.service.name : `MCP 服务 #${instance.serviceId}`}
-                            </h3>
-                            <p className="text-sm text-gray-500 mb-4">ID: {instance.id}</p>
-
-                            <div className="bg-gray-50 p-3 rounded-lg border border-gray-100 mb-4">
-                                <p className="text-xs text-gray-500 font-mono mb-1">WebSocket 地址</p>
-                                <div className="flex items-center gap-2">
-                                    <code className="text-xs flex-1 truncate select-all">{instance.xiaozhiWssUrl}</code>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={async () => {
-                                        const text = instance.xiaozhiWssUrl;
-                                        const success = await copyToClipboard(text);
-                                        if (success) {
-                                            alert("WebSocket 地址已复制到剪贴板！");
-                                        } else {
-                                            prompt("复制失败，请手动复制 WebSocket 地址：", text);
-                                        }
-                                    }}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="p-4 bg-gray-50/50 border-t grid grid-cols-2 gap-3">
-                            {instance.status !== 'running' ? (
-                                <Button
-                                    size="lg"
-                                    className="w-full bg-green-600 hover:bg-green-700 text-white font-bold h-12 text-lg shadow-sm flex items-center justify-center gap-2"
-                                    onClick={() => handleStart(instance.id)}
-                                >
-                                    <Play className="h-5 w-5" /> 启动
-                                </Button>
-                            ) : (
-                                <Button
-                                    size="lg"
-                                    variant="destructive"
-                                    className="w-full font-bold h-12 text-lg shadow-sm flex items-center justify-center gap-2"
-                                    onClick={() => handleStop(instance.id)}
-                                >
-                                    <Square className="h-5 w-5" /> 停止
-                                </Button>
-                            )}
-
-                            <Button
-                                size="lg"
-                                variant="outline"
-                                className="w-full text-gray-600 border-gray-300 hover:bg-red-50 hover:text-red-600 hover:border-red-200 h-12 text-lg flex items-center justify-center gap-2"
-                                onClick={() => handleDelete(instance.id)}
-                            >
-                                <Trash2 className="h-5 w-5" /> 删除
-                            </Button>
-                        </div>
-                    </Card>
-                ))}
-                {instances.length === 0 && !loading && (
-                    <div className="col-span-full flex flex-col items-center justify-center p-12 text-center border-2 border-dashed rounded-xl bg-gray-50/50">
-                        <div className="p-4 bg-gray-100 rounded-full mb-4">
-                            <Plus className="h-8 w-8 text-gray-400" />
-                        </div>
-                        <h3 className="text-xl font-semibold text-gray-900 mb-2">暂无服务实例</h3>
-                        <p className="text-gray-500 mb-6 max-w-sm">您还没有创建任何 MCP 服务实例。去服务市场挑选一个吧！</p>
-                        <Button size="lg" onClick={() => navigate('/marketplace')}>
-                            前往服务市场
-                        </Button>
-                    </div>
-                )}
+          ) : (
+            <div className="app-grid-3">
+              {instances.map(inst => (
+                <InstanceCard
+                  key={inst.id}
+                  instance={inst}
+                  onStart={handleStart}
+                  onStop={handleStop}
+                  onDelete={handleDelete}
+                />
+              ))}
             </div>
-        </Layout>
-    );
+          )}
+        </>
+      )}
+
+      <ActivationModal
+        isOpen={showActivateModal}
+        onClose={() => setShowActivateModal(false)}
+        onSuccess={() => window.location.reload()}
+      />
+    </Layout>
+  );
+}
+
+function InstanceCard({ instance, onStart, onStop, onDelete }: {
+  instance: { id: number; serviceId: number; xiaozhiWssUrl: string; status: string; active: boolean; service?: { name: string } };
+  onStart: (id: number) => void;
+  onStop: (id: number) => void;
+  onDelete: (id: number) => void;
+}) {
+  const isRunning = instance.status === 'running';
+  const isError = instance.status === 'error';
+
+  const handleCopy = async () => {
+    const ok = await copyToClipboard(instance.xiaozhiWssUrl);
+    if (!ok) prompt('请手动复制 WebSocket 地址：', instance.xiaozhiWssUrl);
+  };
+
+  return (
+    <div className="inst-card">
+      <div className="inst-card-body">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+          <div className={cn('inst-power-icon', instance.active && 'on')}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={instance.active ? '#00ff9d' : '#3d5a7a'} strokeWidth="2" strokeLinecap="round">
+              <path d="M18.36 6.64A9 9 0 1 1 5.64 6.64"/><line x1="12" y1="2" x2="12" y2="12"/>
+            </svg>
+          </div>
+          <span className={cn('app-badge', isRunning ? 'app-badge-running' : isError ? 'app-badge-error' : 'app-badge-stopped')}>
+            {isRunning ? '运行中' : isError ? '异常' : '已停止'}
+          </span>
+        </div>
+
+        <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4, color: '#e8f4ff' }}>
+          {instance.service ? instance.service.name : `MCP 服务 #${instance.serviceId}`}
+        </div>
+        <div style={{ fontFamily: "'Share Tech Mono',monospace", fontSize: 10, color: '#3d5a7a', marginBottom: 14 }}>
+          ID: {instance.id}
+        </div>
+
+        <div className="app-code-block" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {instance.xiaozhiWssUrl}
+          </span>
+          <button
+            onClick={handleCopy}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(0,200,255,0.5)', flexShrink: 0, padding: '2px 4px' }}
+            title="复制地址"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div className="inst-card-footer">
+        {!isRunning ? (
+          <button className="app-btn app-btn-success" style={{ flex: 1 }} onClick={() => onStart(instance.id)}>
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M5 3l8 5-8 5V3z"/></svg>
+            启动
+          </button>
+        ) : (
+          <button className="app-btn app-btn-danger" style={{ flex: 1 }} onClick={() => onStop(instance.id)}>
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><rect width="10" height="10" rx="1"/></svg>
+            停止
+          </button>
+        )}
+        <button className="app-btn app-btn-ghost" style={{ flex: 1 }} onClick={() => onDelete(instance.id)}>
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4h12M5 4V2h6v2M6 7v5M10 7v5M3 4l1 10h8l1-10H3z"/></svg>
+          删除
+        </button>
+      </div>
+    </div>
+  );
 }

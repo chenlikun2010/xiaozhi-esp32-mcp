@@ -390,7 +390,7 @@ export default function LandingPage() {
   const filtered = filter === '全部' ? SERVICES : SERVICES.filter(s => s.tag === filter);
 
   // Inject page CSS
-  useEffect(() => {
+  useEffect((): (() => void) | void => {
     const el = document.createElement('style');
     el.textContent = LANDING_CSS;
     document.head.appendChild(el);

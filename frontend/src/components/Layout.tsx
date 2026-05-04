@@ -218,7 +218,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-  useEffect(() => {
+  useEffect((): (() => void) | void => {
     const el = document.createElement('style');
     el.textContent = APP_CSS;
     document.head.appendChild(el);

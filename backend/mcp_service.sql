@@ -1,50 +1,148 @@
 /*
- Navicat Premium Data Transfer
-
- Source Server         : 123.57.30.106_ali_mysql
- Source Server Type    : MySQL
- Source Server Version : 80045
- Source Host           : 123.57.30.106:3306
- Source Schema         : mcplist
-
- Target Server Type    : MySQL
- Target Server Version : 80045
- File Encoding         : 65001
-
- Date: 09/05/2026 12:01:31
+  Unified initialization SQL for open-source edition
+  - Creates all core tables
+  - Seeds initial admin account
+  - Seeds default MCP services
 */
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
--- ----------------------------
--- Table structure for mcp_service
--- ----------------------------
+-- =========================
+-- Drop existing tables (safe re-init order)
+-- =========================
+DROP TABLE IF EXISTS `user_mcp_instance`;
+DROP TABLE IF EXISTS `verification_code`;
+DROP TABLE IF EXISTS `activation_code`;
 DROP TABLE IF EXISTS `mcp_service`;
-CREATE TABLE `mcp_service`  (
-  `id` int(0) NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `image_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  `status` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'stopped',
-  `url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  `config` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 17 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+DROP TABLE IF EXISTS `user`;
 
--- ----------------------------
--- Records of mcp_service
--- ----------------------------
-INSERT INTO `mcp_service` VALUES (1, '联网搜索', '使用阿里云 Qwen Search 进行实时联网搜索。', 'https://img.alice.com/search_icon.png', 'stopped', NULL, NULL);
-INSERT INTO `mcp_service` VALUES (4, '菜谱查询', '不知道吃什么？让 AI 帮你推荐！', 'https://github.com/Anduin2017/HowToCook/raw/master/README.md', 'stopped', NULL, NULL);
-INSERT INTO `mcp_service` VALUES (5, 'MBTI 性格测试', '基于开源项目的 MBTI 性格测试服务。通过对话完成测试，了解你的性格类型（E/I, S/N, T/F, J/P）。', 'https://upload.wikimedia.org/wikipedia/commons/1/1f/MyersBriggsTypes.png', 'stopped', NULL, NULL);
-INSERT INTO `mcp_service` VALUES (6, '股票分析助手', '基于 Yahoo Finance 的实时股票行情与历史数据查询服务。支持美股 (AAPL)、港股 (0700.HK) 等全球市场。', 'https://upload.wikimedia.org/wikipedia/commons/e/e7/Jamstec_stock_graph.gif', 'stopped', NULL, NULL);
-INSERT INTO `mcp_service` VALUES (7, '汇率查询助手', '基于 Frankfurter API 的实时汇率查询与货币转换服务。支持 USD, CNY, EUR, JPY 等全球主流货币，完全免费。', 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Globe_and_currency_symbols.jpg', 'stopped', NULL, NULL);
-INSERT INTO `mcp_service` VALUES (8, '12306 火车票助手', '基于官方数据的实时火车票余票查询服务。支持查询全国主要城市的车次、时刻与票务状态。', 'https://upload.wikimedia.org/wikipedia/commons/e/e0/China_Railways.svg', 'stopped', NULL, NULL);
-INSERT INTO `mcp_service` VALUES (10, '黄金价格查询', '基于实时市场数据的黄金价格查询助手。支持查询国际金价 (XAU/USD)。', 'https://upload.wikimedia.org/wikipedia/commons/6/64/Gold_Bullion_Coins.jpg', 'stopped', NULL, NULL);
-INSERT INTO `mcp_service` VALUES (11, '行业报告专家', '专业的行业报告分析助手。内置 2026 年最新行业趋势报告库，支持语义检索、深度问答与总结。如果本地库缺失，会自动联网检索最新报告并加入分析。', '/report_expert.png', 'stopped', NULL, NULL);
-INSERT INTO `mcp_service` VALUES (13, '快递查询助手', '支持顺丰、圆通、中通、申通、韵达等全网快递物流轨迹实时查询。', 'https://cdn-icons-png.flaticon.com/512/3063/3063822.png', 'stopped', NULL, NULL);
-INSERT INTO `mcp_service` VALUES (14, '飞常准航班服务', '提供全面的航班信息查询服务，支持按航班号、起降地查询航班状态、时刻表及行程信息，同时提供机场天气查询功能。', NULL, 'stopped', NULL, NULL);
-INSERT INTO `mcp_service` VALUES (15, '新闻查询服务', '获取 The Verge 的最新科技新闻，支持查询今日新闻、最近一周新闻摘要以及按关键词搜索历史新闻。', NULL, 'stopped', NULL, NULL);
+-- =========================
+-- user
+-- =========================
+CREATE TABLE `user` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `email` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `role` varchar(255) NOT NULL DEFAULT 'user',
+  `invitation_code` varchar(255) NOT NULL,
+  `referred_by` varchar(255) DEFAULT NULL,
+  `expire_date` datetime NOT NULL,
+  `createdAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_user_email` (`email`),
+  UNIQUE KEY `UQ_user_invitation_code` (`invitation_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- =========================
+-- mcp_service
+-- =========================
+CREATE TABLE `mcp_service` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `description` text NOT NULL,
+  `image_url` varchar(255) DEFAULT NULL,
+  `status` varchar(255) NOT NULL DEFAULT 'stopped',
+  `url` varchar(255) DEFAULT NULL,
+  `config` text,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- =========================
+-- activation_code
+-- =========================
+CREATE TABLE `activation_code` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `code` varchar(255) NOT NULL,
+  `durationDays` int NOT NULL,
+  `isUsed` tinyint(1) NOT NULL DEFAULT 0,
+  `usedBy` int DEFAULT NULL,
+  `usedAt` datetime DEFAULT NULL,
+  `createdAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_activation_code_code` (`code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- =========================
+-- verification_code
+-- =========================
+CREATE TABLE `verification_code` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `email` varchar(255) NOT NULL,
+  `code` varchar(255) NOT NULL,
+  `expiresAt` datetime NOT NULL,
+  `createdAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `IDX_verification_email` (`email`),
+  KEY `IDX_verification_email_code` (`email`, `code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- =========================
+-- user_mcp_instance
+-- =========================
+CREATE TABLE `user_mcp_instance` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `service_id` int NOT NULL,
+  `xiaozhi_wss_url` text NOT NULL,
+  `status` varchar(255) NOT NULL DEFAULT 'stopped',
+  `start_time` datetime DEFAULT NULL,
+  `createdAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `IDX_user_instance_user_id` (`user_id`),
+  KEY `IDX_user_instance_service_id` (`service_id`),
+  CONSTRAINT `FK_user_instance_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `FK_user_instance_service` FOREIGN KEY (`service_id`) REFERENCES `mcp_service` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- =========================
+-- Seed initial admin user
+-- email: admin@facaiai.cn
+-- password: 123456 (bcrypt)
+-- =========================
+INSERT INTO `user` (
+  `id`, `email`, `password`, `role`, `invitation_code`, `referred_by`, `expire_date`, `createdAt`, `updatedAt`
+) VALUES (
+  1,
+  'admin@facaiai.cn',
+  '$2b$10$JoJWU4v7Wb8Itdh1n4ohBeLAXKff2woJ81.gBl3VH60j72oFCpl/u',
+  'admin',
+  'ADMIN2026',
+  NULL,
+  '2099-12-31 23:59:59',
+  NOW(),
+  NOW()
+)
+ON DUPLICATE KEY UPDATE
+  `password` = VALUES(`password`),
+  `role` = VALUES(`role`),
+  `expire_date` = VALUES(`expire_date`),
+  `updatedAt` = NOW();
+
+-- =========================
+-- Seed MCP services
+-- (align with backend/src/seed.ts)
+-- =========================
+INSERT INTO `mcp_service` (`id`, `name`, `description`, `image_url`, `status`, `url`, `config`) VALUES
+(1,  '联网搜索服务',   '支持联网查询最新信息，适用于通用问答与实时资讯检索。', '/vite.svg',         'stopped', NULL, NULL),
+(2,  '做饭助手',       '根据食材和口味推荐菜谱与做法，提供家庭烹饪指导。',       '/vite.svg',         'stopped', NULL, NULL),
+(3,  'MBTI 性格测试',  '提供 MBTI 性格类型分析与结果解读。',                     '/vite.svg',         'stopped', NULL, NULL),
+(4,  '股票查询助手',   '支持股票基础信息与行情查询。',                           '/vite.svg',         'stopped', NULL, NULL),
+(5,  '汇率查询助手',   '查询常见币种汇率，支持多币种换算。',                     '/vite.svg',         'stopped', NULL, NULL),
+(6,  '12306 火车票助手','提供火车票余票与车次信息查询。',                         '/vite.svg',         'stopped', NULL, NULL),
+(7,  '黄金价格查询',   '查询黄金价格与市场参考数据。',                           '/vite.svg',         'stopped', NULL, NULL),
+(8,  '行业报告专家',   '提供行业报告检索与问答能力。',                           '/report_expert.png','stopped', NULL, NULL),
+(9,  '快递查询助手',   '支持主流快递单号物流轨迹查询。',                         '/vite.svg',         'stopped', NULL, NULL),
+(10, '飞常准航班服务', '提供航班动态、时刻与相关信息查询。',                     '/vite.svg',         'stopped', NULL, NULL),
+(11, '新闻查询服务',   '聚合科技新闻与资讯，支持关键词检索。',                   '/vite.svg',         'stopped', NULL, NULL),
+(12, '番茄小说全能助手','提供番茄小说检索、目录与章节内容能力。',                 '/vite.svg',         'stopped', NULL, NULL)
+ON DUPLICATE KEY UPDATE
+  `name` = VALUES(`name`),
+  `description` = VALUES(`description`),
+  `image_url` = VALUES(`image_url`),
+  `status` = VALUES(`status`),
+  `url` = VALUES(`url`),
+  `config` = VALUES(`config`);
 
 SET FOREIGN_KEY_CHECKS = 1;

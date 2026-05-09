@@ -58,8 +58,12 @@ export default function ForgotPassword() {
       await axios.post('/api/forgot-password', { email });
       setMessage('验证码已发送至您的邮箱，请查收。');
       setStep(2);
-    } catch (err: any) {
-      setError(err.response?.data?.message || '发送失败');
+    } catch (err: unknown) {
+      if (axios.isAxiosError<{ message?: string }>(err)) {
+        setError(err.response?.data?.message || err.message || '发送失败');
+      } else {
+        setError('发送失败');
+      }
     } finally {
       setLoading(false);
     }
@@ -73,8 +77,12 @@ export default function ForgotPassword() {
       await axios.post('/api/reset-password', { email, code, newPassword });
       setStep(3);
       setTimeout(() => navigate('/login'), 2000);
-    } catch (err: any) {
-      setError(err.response?.data?.message || '重置失败');
+    } catch (err: unknown) {
+      if (axios.isAxiosError<{ message?: string }>(err)) {
+        setError(err.response?.data?.message || err.message || '重置失败');
+      } else {
+        setError('重置失败');
+      }
     } finally {
       setLoading(false);
     }
@@ -102,7 +110,7 @@ export default function ForgotPassword() {
               <line x1="26" y1="16" x2="30" y2="16" stroke="rgba(0,200,255,0.6)" strokeWidth="1.5" />
             </svg>
             <div>
-              <div className="auth-logo-text">小智 MCP</div>
+              <div className="auth-logo-text">小智 ESP32的 MCP 平台</div>
               <div className="auth-logo-sub">ESP32 · Open Source</div>
             </div>
           </Link>

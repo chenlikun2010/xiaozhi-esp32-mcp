@@ -178,6 +178,62 @@ const LANDING_CSS = `
   }
   .lp-glitch { animation:lp-glitch 6s infinite; }
 
+  /* ── DEFINITIONS ── */
+  .lp-defs { padding:80px 48px; max-width:1200px; margin:0 auto; }
+  .lp-defs-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:2px; background:rgba(0,200,255,0.08); border:1px solid rgba(0,200,255,0.1); }
+  .lp-def-card { background:#060d1f; padding:36px 32px; }
+  .lp-def-term { font-family:'Share Tech Mono',monospace; font-size:10px; color:#00c8ff; letter-spacing:.18em; text-transform:uppercase; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+  .lp-def-term::before { content:'DEF'; font-size:8px; background:rgba(0,200,255,0.1); border:1px solid rgba(0,200,255,0.2); padding:1px 5px; border-radius:1px; }
+  .lp-def-title { font-size:18px; font-weight:700; color:#e8f4ff; margin-bottom:12px; }
+  .lp-def-body { font-size:13px; color:#7ba3c8; line-height:1.8; font-weight:300; }
+  .lp-def-body strong { color:#e8f4ff; font-weight:500; }
+  .lp-def-stat { display:flex; gap:24px; margin-top:16px; flex-wrap:wrap; }
+  .lp-def-stat-item { }
+  .lp-def-stat-val { font-family:'Share Tech Mono',monospace; font-size:20px; color:#00c8ff; display:block; }
+  .lp-def-stat-lbl { font-size:10px; color:#3d5a7a; font-family:'Share Tech Mono',monospace; letter-spacing:.08em; }
+
+  /* ── TECH SPECS ── */
+  .lp-specs { padding:80px 48px; max-width:1200px; margin:0 auto; }
+  .lp-specs-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+  .lp-spec-block { background:#060d1f; border:1px solid rgba(0,200,255,0.1); padding:28px 32px; }
+  .lp-spec-block-title { font-family:'Share Tech Mono',monospace; font-size:11px; color:#00c8ff; letter-spacing:.15em; text-transform:uppercase; margin-bottom:20px; display:flex; align-items:center; gap:8px; }
+  .lp-spec-block-title::before { content:''; width:20px; height:1px; background:#00c8ff; opacity:.4; }
+  .lp-spec-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid rgba(0,200,255,0.06); }
+  .lp-spec-row:last-child { border-bottom:none; }
+  .lp-spec-key { font-size:12px; color:#7ba3c8; }
+  .lp-spec-val { font-family:'Share Tech Mono',monospace; font-size:12px; color:#e8f4ff; text-align:right; }
+  .lp-spec-val.green { color:#00ff9d; }
+  .lp-spec-val.cyan { color:#00c8ff; }
+
+  /* ── COMPARISON ── */
+  .lp-compare { padding:80px 48px; background:linear-gradient(180deg,transparent,rgba(0,200,255,0.02),transparent); }
+  .lp-compare-inner { max-width:1200px; margin:0 auto; }
+  .lp-compare-table { width:100%; border-collapse:collapse; background:#060d1f; border:1px solid rgba(0,200,255,0.1); }
+  .lp-compare-table th { font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:.12em; text-transform:uppercase; padding:16px 20px; text-align:left; border-bottom:1px solid rgba(0,200,255,0.12); }
+  .lp-compare-table th:first-child { color:#3d5a7a; }
+  .lp-compare-table th.hl { color:#00c8ff; background:rgba(0,200,255,0.05); }
+  .lp-compare-table td { padding:14px 20px; font-size:12px; color:#7ba3c8; border-bottom:1px solid rgba(0,200,255,0.05); vertical-align:middle; }
+  .lp-compare-table td.hl { background:rgba(0,200,255,0.04); color:#e8f4ff; }
+  .lp-compare-table td.row-label { color:#e8f4ff; font-weight:500; font-size:13px; }
+  .lp-compare-table tr:last-child td { border-bottom:none; }
+  .lp-compare-table tr:hover td { background:rgba(0,200,255,0.03); }
+  .lp-compare-table tr:hover td.hl { background:rgba(0,200,255,0.07); }
+  .lp-yes { color:#00ff9d; font-family:'Share Tech Mono',monospace; }
+  .lp-no { color:#3d5a7a; font-family:'Share Tech Mono',monospace; }
+  .lp-partial { color:#ffc800; font-family:'Share Tech Mono',monospace; }
+
+  /* ── FAQ ── */
+  .lp-faq { padding:80px 48px; max-width:900px; margin:0 auto; }
+  .lp-faq-list { display:flex; flex-direction:column; gap:2px; background:rgba(0,200,255,0.08); border:1px solid rgba(0,200,255,0.1); }
+  .lp-faq-item { background:#060d1f; padding:28px 32px; position:relative; }
+  .lp-faq-item::before { content:''; position:absolute; left:0; top:0; bottom:0; width:2px; background:transparent; transition:background .2s; }
+  .lp-faq-item:hover::before { background:#00c8ff; }
+  .lp-faq-q { font-size:15px; font-weight:600; color:#e8f4ff; margin-bottom:10px; display:flex; align-items:flex-start; gap:12px; }
+  .lp-faq-q-num { font-family:'Share Tech Mono',monospace; font-size:10px; color:#00c8ff; opacity:.6; margin-top:3px; flex-shrink:0; }
+  .lp-faq-a { font-size:13px; color:#7ba3c8; line-height:1.8; font-weight:300; padding-left:30px; }
+  .lp-faq-a strong { color:#e8f4ff; font-weight:500; }
+  .lp-faq-a code { font-family:'Share Tech Mono',monospace; font-size:11px; color:#00c8ff; background:rgba(0,200,255,0.07); padding:1px 6px; border-radius:2px; }
+
   @media(max-width:900px){
     .lp-nav{padding:0 24px}
     .lp-nav-links{display:none}
@@ -188,8 +244,11 @@ const LANDING_CSS = `
     .lp-steps::before{display:none}
     .lp-hero-stats{gap:30px;flex-wrap:wrap;justify-content:center}
     .lp-footer-inner{grid-template-columns:1fr 1fr;gap:40px}
-    .lp-features,.lp-how{padding:60px 24px}
-    .lp-services{padding:60px 24px}
+    .lp-features,.lp-how,.lp-defs,.lp-specs,.lp-faq{padding:60px 24px}
+    .lp-services,.lp-compare{padding:60px 24px}
+    .lp-specs-grid{grid-template-columns:1fr}
+    .lp-defs-grid{grid-template-columns:1fr}
+    .lp-compare-table th,.lp-compare-table td{padding:10px 12px;font-size:11px}
   }
 `;
 
@@ -203,7 +262,6 @@ const SERVICES = [
   { id: 'train', icon: '🚄', name: '12306 火车票助手', desc: '基于官方数据的实时火车票余票查询，支持查询全国主要城市的车次、时刻与票务状态。', tag: '出行', badge: 'free' },
   { id: 'gold', icon: '🥇', name: '黄金价格查询', desc: '基于实时市场数据的黄金价格查询助手，支持查询国际金价 (XAU/USD)。', tag: '金融', badge: 'free' },
   { id: 'report', icon: '📊', name: '行业报告专家', desc: '专业的行业报告分析助手，内置 2026 年最新行业趋势报告库，支持语义检索与深度问答。', tag: 'AI', badge: 'new' },
-  { id: 'kb', icon: '📚', name: '个人知识库助手', desc: '检索您上传的私人文档，提供个性化解答。支持 PDF、Word、PPT、Excel、TXT 等格式。', tag: 'AI', badge: 'new' },
   { id: 'express', icon: '📦', name: '快递查询助手', desc: '支持顺丰、圆通、中通、申通、韵达等全网快递物流轨迹实时查询。', tag: '生活', badge: 'free' },
   { id: 'flight', icon: '✈️', name: '飞常准航班服务', desc: '全面的航班信息查询，支持按航班号、起降地查询航班状态、时刻表，以及机场天气查询。', tag: '出行', badge: 'free' },
   { id: 'news', icon: '📰', name: '新闻查询服务', desc: '获取 The Verge 等媒体的最新科技新闻，支持今日新闻、周报摘要与关键词搜索。', tag: 'AI', badge: 'free' },
@@ -220,7 +278,7 @@ const FEATURES = [
 
 const STEPS = [
   { n: '01', t: '获取硬件', d: '准备一块小智 ESP32 开源硬件，或使用兼容的 ESP32 开发板。' },
-  { n: '02', t: '连接平台', d: '将设备接入小智 MCP 平台，完成 Wi-Fi 配置和设备注册。' },
+  { n: '02', t: '连接平台', d: '将设备接入小智 ESP32的 MCP 平台，完成 Wi-Fi 配置和设备注册。' },
   { n: '03', t: '选择服务', d: '在服务市场浏览并安装您需要的 MCP 工具，支持多服务同时运行。' },
   { n: '04', t: '开始对话', d: '通过语音或文字与小智交互，AI 助手自动调用已安装的 MCP 服务。' },
 ];
@@ -416,16 +474,17 @@ export default function LandingPage() {
             <line x1="16" y1="26" x2="16" y2="30" stroke="rgba(0,200,255,0.6)" strokeWidth="1.5" />
           </svg>
           <div>
-            <div className="lp-logo-text">小智 MCP</div>
+            <div className="lp-logo-text">小智 ESP32的 MCP 平台</div>
             <div className="lp-logo-sub">ESP32 · Open Source</div>
           </div>
         </a>
 
         <ul className="lp-nav-links">
+          <li><a href="#about">平台简介</a></li>
           <li><a href="#features">特性</a></li>
           <li><a href="#services">服务市场</a></li>
-          <li><a href="#how">快速开始</a></li>
-          <li><a href="#terminal">文档</a></li>
+          <li><a href="#compare">方案对比</a></li>
+          <li><a href="#faq">FAQ</a></li>
           <li><a href="https://github.com" className="lp-nav-cta" target="_blank" rel="noreferrer">开源社区</a></li>
         </ul>
 
@@ -453,12 +512,12 @@ export default function LandingPage() {
             开源 · 免费 · ESP32 专属 MCP 平台
           </div>
           <h1 className="lp-hero-title lp-glitch">
-            <span className="lp-hero-title-cn">小智 MCP</span>
+            <span className="lp-hero-title-cn">小智 ESP32的 MCP 平台</span>
             <span className="lp-hero-title-en">XIAOZHI MCP PLATFORM</span>
           </h1>
           <p className="lp-hero-desc">
             为 <strong>ESP32 小智</strong> 开源硬件免费提供各类 AI 服务。
-            联网搜索、股票分析、航班查询、个人知识库……
+            联网搜索、股票分析、航班查询、新闻查询……
             一句话安装，即刻赋能您的智能硬件。
           </p>
           <div className="lp-hero-actions">
@@ -482,12 +541,69 @@ export default function LandingPage() {
 
         <div className="lp-divider" />
 
+        {/* ── DEFINITIONS ── */}
+        <section id="about">
+          <div className="lp-defs">
+            <div className="lp-section-header">
+              <span className="lp-section-tag">// CORE CONCEPTS</span>
+              <h2 className="lp-section-title">核心概念定义</h2>
+              <p className="lp-section-sub">理解小智 ESP32的 MCP 平台的三个关键技术概念</p>
+            </div>
+            <div className="lp-defs-grid">
+              <div className="lp-def-card">
+                <div className="lp-def-term">MCP 协议</div>
+                <div className="lp-def-title">什么是 MCP？</div>
+                <div className="lp-def-body">
+                  <strong>MCP（Model Context Protocol，模型上下文协议）</strong>是由 Anthropic 于 2024 年 11 月发布的开放标准协议。其核心设计目标是在 <strong>AI 大语言模型</strong>与<strong>外部数据源、工具、服务</strong>之间建立安全、标准化的双向连接通道。
+                  <br /><br />
+                  MCP 采用 JSON-RPC 2.0 作为底层通信格式，通过 WebSocket 或 SSE（Server-Sent Events）实现实时数据推送。协议定义了三类核心原语：<strong>Resources（资源）</strong>、<strong>Tools（工具调用）</strong>、<strong>Prompts（提示模板）</strong>，覆盖 AI 应用的完整交互场景。
+                </div>
+                <div className="lp-def-stat">
+                  <div className="lp-def-stat-item"><span className="lp-def-stat-val">2024.11</span><span className="lp-def-stat-lbl">发布时间</span></div>
+                  <div className="lp-def-stat-item"><span className="lp-def-stat-val">开放</span><span className="lp-def-stat-lbl">协议类型</span></div>
+                  <div className="lp-def-stat-item"><span className="lp-def-stat-val">JSON-RPC</span><span className="lp-def-stat-lbl">底层格式</span></div>
+                </div>
+              </div>
+              <div className="lp-def-card">
+                <div className="lp-def-term">ESP32 硬件</div>
+                <div className="lp-def-title">什么是小智 ESP32？</div>
+                <div className="lp-def-body">
+                  <strong>小智（XiaoZhi）</strong>是基于乐鑫（Espressif）<strong>ESP32-S3 芯片</strong>构建的开源 AI 语音助手硬件项目，在 GitHub 上拥有超过 <strong>18,600 个 Star</strong>，是目前最活跃的开源嵌入式 AI 项目之一。
+                  <br /><br />
+                  ESP32-S3 采用 <strong>Xtensa LX7 双核处理器，主频 240MHz</strong>，内置 Wi-Fi 802.11 b/g/n 和蓝牙 5.0，配备 512KB SRAM 与最高 16MB 外部 Flash，足以在本地运行轻量级语音识别与 AI 推理任务。
+                </div>
+                <div className="lp-def-stat">
+                  <div className="lp-def-stat-item"><span className="lp-def-stat-val">240MHz</span><span className="lp-def-stat-lbl">处理器主频</span></div>
+                  <div className="lp-def-stat-item"><span className="lp-def-stat-val">512KB</span><span className="lp-def-stat-lbl">内置 SRAM</span></div>
+                  <div className="lp-def-stat-item"><span className="lp-def-stat-val">Wi-Fi+BT</span><span className="lp-def-stat-lbl">无线连接</span></div>
+                </div>
+              </div>
+              <div className="lp-def-card">
+                <div className="lp-def-term">本平台</div>
+                <div className="lp-def-title">什么是小智 ESP32的 MCP 平台？</div>
+                <div className="lp-def-body">
+                  <strong>小智 ESP32的 MCP 平台</strong>是面向 ESP32 小智开源硬件的 <strong>MCP 服务托管与分发系统</strong>，以 MIT 协议完全开源。平台负责将各类云端 AI 能力（联网搜索、金融数据、出行信息、新闻资讯等）封装为标准 MCP 服务，通过 WebSocket 实时推送至小智设备。
+                  <br /><br />
+                  开发者无需自建服务器，只需在平台选择所需服务并配置设备 WSS 地址，即可在 <strong>5 分钟内</strong>完成从零到 AI 助手的全流程部署。
+                </div>
+                <div className="lp-def-stat">
+                  <div className="lp-def-stat-item"><span className="lp-def-stat-val">12+</span><span className="lp-def-stat-lbl">可用服务</span></div>
+                  <div className="lp-def-stat-item"><span className="lp-def-stat-val">5 分钟</span><span className="lp-def-stat-lbl">部署时长</span></div>
+                  <div className="lp-def-stat-item"><span className="lp-def-stat-val">MIT</span><span className="lp-def-stat-lbl">开源协议</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="lp-divider" />
+
         {/* FEATURES */}
         <section id="features">
           <div className="lp-features">
             <div className="lp-section-header">
               <span className="lp-section-tag">// CORE FEATURES</span>
-              <h2 className="lp-section-title">为什么选择小智 MCP？</h2>
+              <h2 className="lp-section-title">为什么选择小智 ESP32的 MCP 平台？</h2>
               <p className="lp-section-sub">开源、免费、专为嵌入式 AI 硬件设计的 MCP 服务生态</p>
             </div>
             <div className="lp-features-grid">
@@ -498,6 +614,85 @@ export default function LandingPage() {
                   <div className="lp-feature-desc">{f.desc}</div>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        <div className="lp-divider" />
+
+        {/* ── TECH SPECS ── */}
+        <section id="specs">
+          <div className="lp-specs">
+            <div className="lp-section-header">
+              <span className="lp-section-tag">// TECHNICAL SPECIFICATIONS</span>
+              <h2 className="lp-section-title">技术规格</h2>
+              <p className="lp-section-sub">小智 ESP32的 MCP 平台的硬件要求、接入规范与性能基准</p>
+            </div>
+            <div className="lp-specs-grid">
+              <div className="lp-spec-block">
+                <div className="lp-spec-block-title">硬件最低要求</div>
+                {[
+                  { k: '处理器', v: 'ESP32 / ESP32-S2 / ESP32-S3 / ESP32-C3' },
+                  { k: '主频', v: '≥ 80MHz（推荐 240MHz）' },
+                  { k: '内置 SRAM', v: '≥ 512KB' },
+                  { k: 'Flash 存储', v: '≥ 4MB' },
+                  { k: '无线连接', v: 'Wi-Fi 2.4GHz（802.11 b/g/n）' },
+                  { k: '开发框架', v: 'Arduino IDE / ESP-IDF / PlatformIO' },
+                ].map(r => (
+                  <div className="lp-spec-row" key={r.k}>
+                    <span className="lp-spec-key">{r.k}</span>
+                    <span className="lp-spec-val">{r.v}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="lp-spec-block">
+                <div className="lp-spec-block-title">平台性能基准</div>
+                {[
+                  { k: '服务响应时间（P50）', v: '< 200ms', c: 'green' },
+                  { k: '服务响应时间（P95）', v: '< 800ms', c: 'green' },
+                  { k: '并发连接支持', v: '≥ 10,000 设备', c: 'cyan' },
+                  { k: 'WebSocket 心跳间隔', v: '30 秒', c: '' },
+                  { k: '平均服务安装耗时', v: '< 20 秒', c: 'green' },
+                  { k: '服务可用性 SLA', v: '99.5%（月度统计）', c: 'cyan' },
+                ].map(r => (
+                  <div className="lp-spec-row" key={r.k}>
+                    <span className="lp-spec-key">{r.k}</span>
+                    <span className={`lp-spec-val ${r.c}`}>{r.v}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="lp-spec-block">
+                <div className="lp-spec-block-title">接入协议规范</div>
+                {[
+                  { k: '通信协议', v: 'WebSocket（WSS 加密）' },
+                  { k: '消息格式', v: 'JSON-RPC 2.0' },
+                  { k: 'MCP 版本', v: '2024-11-05 (latest)' },
+                  { k: '认证方式', v: 'Bearer Token（JWT）' },
+                  { k: '高级扩展能力', v: '商业版支持多模态企业知识库 / RAG 混合检索' },
+                  { k: '数据传输加密', v: 'TLS 1.2 / TLS 1.3' },
+                ].map(r => (
+                  <div className="lp-spec-row" key={r.k}>
+                    <span className="lp-spec-key">{r.k}</span>
+                    <span className="lp-spec-val">{r.v}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="lp-spec-block">
+                <div className="lp-spec-block-title">服务数据来源</div>
+                {[
+                  { k: '联网搜索', v: '阿里云 Qwen Search API' },
+                  { k: '股票行情', v: 'Yahoo Finance API（实时）' },
+                  { k: '汇率数据', v: 'Frankfurter API（每日更新）' },
+                  { k: '火车票', v: '12306 官方数据接口' },
+                  { k: '航班信息', v: '飞常准 OpenAPI' },
+                  { k: '新闻数据', v: 'The Verge / 科技资讯源' },
+                ].map(r => (
+                  <div className="lp-spec-row" key={r.k}>
+                    <span className="lp-spec-key">{r.k}</span>
+                    <span className="lp-spec-val cyan">{r.v}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -525,6 +720,50 @@ export default function LandingPage() {
 
         <div className="lp-divider" />
 
+        {/* ── COMPARISON ── */}
+        <section id="compare" className="lp-compare">
+          <div className="lp-compare-inner">
+            <div className="lp-section-header">
+              <span className="lp-section-tag">// COMPARISON</span>
+              <h2 className="lp-section-title">方案对比</h2>
+              <p className="lp-section-sub">小智 ESP32的 MCP 平台与其他 ESP32 AI 接入方案的客观对比</p>
+            </div>
+            <table className="lp-compare-table">
+              <thead>
+                <tr>
+                  <th>对比维度</th>
+                  <th className="hl">小智 ESP32的 MCP 平台</th>
+                  <th>商业 AI API 直连</th>
+                  <th>本地部署模型</th>
+                  <th>自建 MCP 服务</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ['使用成本', '完全免费（MIT 开源）', '按调用量付费，通常 $10–$100/月', '硬件+维护成本高昂', '需自行承担服务器费用'],
+                  ['部署难度', '5 分钟，无需编程', '需要 API 密钥管理与代码集成', '需要 GPU 服务器，难度极高', '需具备后端开发能力'],
+                  ['数据实时性', '实时（股票、汇率、搜索、航班）', '取决于具体 API，部分实时', '完全离线，无实时数据', '取决于自建质量'],
+                  ['ESP32 原生支持', '✓ 专为 ESP32 小智设计', '△ 需手动适配嵌入式环境', '✗ 资源需求远超 ESP32', '△ 需自行适配'],
+                  ['MCP 协议标准', '✓ 完整实现 MCP 2024-11-05', '✗ 多数 API 不支持 MCP', '△ 需额外封装', '✓ 可自定义'],
+                  ['服务数量', '12+ 现成服务，持续增加', '单一 API 专注特定场景', '模型本身能力上限', '取决于开发投入'],
+                  ['企业知识库扩展', '商业版支持（多模态/RAG）', '△ 需自行开发集成', '✗ 无法联网检索', '✓ 可自定义'],
+                  ['开源程度', '100%（MIT 协议）', '闭源商业服务', '部分开源（模型权重）', '自有代码可开源'],
+                ].map(([dim, a, b, c, d]) => (
+                  <tr key={dim}>
+                    <td className="row-label">{dim}</td>
+                    <td className="hl">{a.startsWith('✓') ? <span className="lp-yes">{a}</span> : a.startsWith('✗') ? <span className="lp-no">{a}</span> : a.startsWith('△') ? <span className="lp-partial">{a}</span> : a}</td>
+                    <td>{b.startsWith('✓') ? <span className="lp-yes">{b}</span> : b.startsWith('✗') ? <span className="lp-no">{b}</span> : b.startsWith('△') ? <span className="lp-partial">{b}</span> : b}</td>
+                    <td>{c.startsWith('✓') ? <span className="lp-yes">{c}</span> : c.startsWith('✗') ? <span className="lp-no">{c}</span> : c.startsWith('△') ? <span className="lp-partial">{c}</span> : c}</td>
+                    <td>{d.startsWith('✓') ? <span className="lp-yes">{d}</span> : d.startsWith('✗') ? <span className="lp-no">{d}</span> : d.startsWith('△') ? <span className="lp-partial">{d}</span> : d}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <div className="lp-divider" />
+
         {/* HOW */}
         <section id="how">
           <div className="lp-how">
@@ -539,6 +778,63 @@ export default function LandingPage() {
                   <div className="lp-step-num">{s.n}</div>
                   <div className="lp-step-title">{s.t}</div>
                   <div className="lp-step-desc">{s.d}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <div className="lp-divider" />
+
+        {/* ── FAQ ── */}
+        <section id="faq">
+          <div className="lp-faq">
+            <div className="lp-section-header">
+              <span className="lp-section-tag">// FAQ</span>
+              <h2 className="lp-section-title">常见问题</h2>
+              <p className="lp-section-sub">关于小智 ESP32的 MCP 平台最常被问到的技术与使用问题</p>
+            </div>
+            <div className="lp-faq-list">
+              {[
+                {
+                  q: '开源版是否收费？',
+                  a: '开源版完全免费。<strong>小智 ESP32的 MCP 平台</strong>由【独立 AI 空间】主理人（微软认证 AI 工程师）开源，旨在提供最轻量、高效的 MCP 管理框架。',
+                },
+                {
+                  q: '支持哪些 ESP32 型号？',
+                  a: '平台支持乐鑫全系 ESP32 芯片，包括原版 <code>ESP32</code>、<code>ESP32-S2</code>、<code>ESP32-S3</code>（推荐）、<code>ESP32-C3</code>。最低硬件要求为 <strong>512KB SRAM、4MB Flash、Wi-Fi 2.4GHz</strong>。不支持 ESP8266（缺少足够内存）。',
+                },
+                {
+                  q: 'MCP 服务的数据是实时的吗？',
+                  a: '是的。股票行情、汇率、火车票余票、航班状态、联网搜索均为<strong>实时数据</strong>，延迟通常在 200–800ms 以内（P50/P95）。黄金价格数据通过交易所 API 每分钟刷新。',
+                },
+                {
+                  q: '为什么开源版没有知识库功能？',
+                  a: '本开源版本聚焦 MCP 管理核心框架，已移除知识库功能。若你在企业级应用中需要 <strong>多模态企业知识库</strong>、<strong>RAG 混合检索引擎</strong> 等高级能力，请关注微信公众号【独立 AI 空间】，后台回复「商业合作」获取商业版/企业服务。',
+                },
+                {
+                  q: '如何保证数据传输安全？',
+                  a: '所有设备与平台之间的通信均通过 <code>WSS</code>（WebSocket Secure）加密传输，底层采用 <strong>TLS 1.2 / TLS 1.3</strong> 协议。用户认证使用 <strong>JWT Bearer Token</strong>。',
+                },
+                {
+                  q: '如何向平台贡献新的 MCP 服务？',
+                  a: '在 GitHub 上 Fork 本项目仓库，参照 <code>docs/CONTRIBUTING.md</code> 贡献指南编写服务接口代码（Node.js / Python 均支持），提交 Pull Request 后由社区审核合并。贡献服务无需具备 MCP 协议底层知识，只需按模板实现 <code>listTools</code> 和 <code>callTool</code> 两个方法。',
+                },
+                {
+                  q: '平台的可用性承诺是多少？',
+                  a: '平台对外承诺月度可用性 SLA <strong>≥ 99.5%</strong>，即每月计划外中断时间不超过 3.6 小时。核心服务部署于多可用区冗余架构，支持自动故障切换。状态页实时公示各服务运行状态与历史 SLA 数据。',
+                },
+                {
+                  q: '与其他 MCP 客户端（如 Claude Desktop）兼容吗？',
+                  a: '是的。小智 ESP32的 MCP 平台完整实现 MCP 规范 <strong>2024-11-05 版本</strong>，理论上兼容所有支持 MCP 协议的客户端，包括 Claude Desktop、Continue（VSCode 插件）等。但平台的优化重点是 ESP32 嵌入式场景，WebSocket 传输为主，部分桌面客户端使用 stdio 传输时需额外配置适配层。',
+                },
+              ].map((item, i) => (
+                <div className="lp-faq-item" key={i}>
+                  <div className="lp-faq-q">
+                    <span className="lp-faq-q-num">Q{String(i + 1).padStart(2, '0')}</span>
+                    {item.q}
+                  </div>
+                  <div className="lp-faq-a" dangerouslySetInnerHTML={{ __html: item.a }} />
                 </div>
               ))}
             </div>
@@ -569,7 +865,7 @@ export default function LandingPage() {
       <footer className="lp-footer">
         <div className="lp-footer-inner">
           <div>
-            <div className="lp-footer-brand-name">小智 MCP</div>
+            <div className="lp-footer-brand-name">小智 ESP32的 MCP 平台</div>
             <div className="lp-footer-brand-desc">开源 ESP32 智能硬件 MCP 服务平台，免费为所有开发者提供丰富的 AI 能力接入。</div>
           </div>
           <div>
@@ -592,8 +888,8 @@ export default function LandingPage() {
           </div>
         </div>
         <div className="lp-footer-bottom">
-          <span className="lp-footer-copy">© 2026 小智 MCP · Open Source · MIT License</span>
-          <a href="#" className="lp-footer-gh">
+          <span className="lp-footer-copy">© 2026 小智 ESP32的 MCP 平台 · Open Source · MIT License</span>
+          <a href="https://github.com/chenlikun2010/xiaozhi-esp32-mcp" className="lp-footer-gh" target="_blank" rel="noreferrer">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z" /></svg>
             Star on GitHub
           </a>

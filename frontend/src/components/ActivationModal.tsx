@@ -24,8 +24,12 @@ export function ActivationModal({ isOpen, onClose, onSuccess }: ActivationModalP
       localStorage.setItem('user', JSON.stringify(user));
       onSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err.response?.data?.message || '激活失败，请检查激活码');
+    } catch (err: unknown) {
+      if (axios.isAxiosError<{ message?: string }>(err)) {
+        setError(err.response?.data?.message || err.message || '激活失败，请检查激活码');
+      } else {
+        setError('激活失败，请检查激活码');
+      }
     } finally {
       setLoading(false);
     }

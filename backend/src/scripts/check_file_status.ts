@@ -1,4 +1,3 @@
-
 import 'dotenv/config';
 import { Pool } from 'pg';
 import path from 'path';
@@ -17,23 +16,8 @@ const config = {
 
 const pool = new Pool(config);
 
-async function checkStatus() {
-    const client = await pool.connect();
-    try {
-        await client.query(`SET search_path TO ${config.schema}, public`);
-        // Check file 65 specifically, or recent files
-        const result = await client.query(`
-            SELECT id, file_name, status, error_message, chunk_count, created_at, updated_at 
-            FROM user_knowledge_files 
-            WHERE id = 65
-        `);
-        console.table(result.rows);
-    } catch (error) {
-        console.error('Error checking status:', error);
-    } finally {
-        client.release();
-        pool.end();
-    }
-}
+/**
+ * 已下线：知识库功能已从开源版移除。
+ */
 
-checkStatus();
+console.log('知识库功能已从开源版移除，不再支持 check_file_status 脚本。');

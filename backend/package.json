@@ -1,5 +1,5 @@
 {
-  "name": "backend",
+  "name": "xiaozhi-esp32-mcp-platform-backend",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -8,14 +8,16 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "worker:report": "ts-node src/workers/reportWorker.ts",
-    "worker:knowledge": "ts-node src/workers/knowledgeWorker.ts"
+    "db:init": "ts-node src/scripts/init_schema.ts",
+    "db:seed": "ts-node src/seed.ts",
+    "db:bootstrap": "npm run db:init && npm run db:seed"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "小智 ESP32的 MCP 平台后端服务（开源版）",
   "devDependencies": {
-    "@types/pdf-parse": "^1.1.5",
+    "https-proxy-agent": "^9.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
     "vitest": "^2.0.5"
@@ -43,23 +45,17 @@
     "form-data": "^4.0.5",
     "iconv-lite": "^0.7.2",
     "jsonwebtoken": "^9.0.3",
-    "mammoth": "^1.11.0",
     "multer": "^2.0.2",
     "mysql2": "^3.15.3",
     "node-cron": "^4.2.1",
     "nodemailer": "^7.0.12",
-    "officeparser": "^6.0.4",
     "p-limit": "^3.1.0",
     "p-retry": "^4.6.2",
-    "pdf-img-convert": "^2.0.0",
-    "pdf-parse": "^1.1.1",
-    "pdf-to-img": "^5.0.0",
     "pg": "^8.17.1",
     "reflect-metadata": "^0.2.2",
     "typeorm": "^0.3.27",
     "uuid": "^13.0.0",
     "ws": "^8.19.0",
-    "xlsx": "^0.18.5",
     "yahoo-finance2": "^3.13.0",
     "zod": "^4.3.5"
   }

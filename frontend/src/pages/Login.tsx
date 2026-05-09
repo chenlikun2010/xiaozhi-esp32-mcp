@@ -94,9 +94,13 @@ export default function Login() {
       setSending(false);
       setCountdown(60);
       const t = setInterval(() => setCountdown(v => { if (v <= 1) { clearInterval(t); return 0; } return v - 1; }), 1000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setSending(false);
-      setError(err.response?.data?.message || '发送失败');
+      if (axios.isAxiosError<{ message?: string }>(err)) {
+        setError(err.response?.data?.message || err.message || '发送失败');
+      } else {
+        setError('发送失败');
+      }
     }
   };
 
@@ -110,8 +114,12 @@ export default function Login() {
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       navigate(res.data.user.role === 'admin' ? '/admin/dashboard' : '/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.message || '登录失败');
+    } catch (err: unknown) {
+      if (axios.isAxiosError<{ message?: string }>(err)) {
+        setError(err.response?.data?.message || err.message || '登录失败');
+      } else {
+        setError('登录失败');
+      }
     } finally {
       setLoading(false);
     }
@@ -139,7 +147,7 @@ export default function Login() {
               <line x1="26" y1="16" x2="30" y2="16" stroke="rgba(0,200,255,0.6)" strokeWidth="1.5" />
             </svg>
             <div>
-              <div className="auth-logo-text">小智 MCP</div>
+              <div className="auth-logo-text">小智 ESP32的 MCP 平台</div>
               <div className="auth-logo-sub">ESP32 · Open Source</div>
             </div>
           </Link>
@@ -147,7 +155,7 @@ export default function Login() {
           <div className="auth-box">
             <div className="auth-tag">USER ACCESS</div>
             <div className="auth-title">欢迎回来</div>
-            <div className="auth-sub">登录您的小智 MCP 账户以继续</div>
+            <div className="auth-sub">登录您的小智 ESP32的 MCP 平台账户以继续</div>
 
             <div className="auth-tabs">
               <button className={`auth-tab ${mode === 'password' ? 'active' : ''}`} onClick={() => setMode('password')}>账号密码</button>

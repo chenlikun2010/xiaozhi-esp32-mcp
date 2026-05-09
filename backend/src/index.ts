@@ -52,31 +52,10 @@ app.put('/admin/users/:id', authMiddleware, adminMiddleware, AdminController.upd
 app.get('/admin/codes', authMiddleware, adminMiddleware, CodeController.listCodes);
 app.post('/admin/codes/generate', authMiddleware, adminMiddleware, CodeController.generateCodes);
 
-// Knowledge Base Routes (小慧机器人知识库管理)
-import { UserKnowledgeController, upload } from './controllers/UserKnowledgeController';
-
-app.post('/kb/upload', authMiddleware, upload.single('file'), UserKnowledgeController.uploadFile);
-app.get('/kb/list', authMiddleware, UserKnowledgeController.getFiles);
-app.get('/kb/file/:id/status', authMiddleware, UserKnowledgeController.getFileStatus);
-app.delete('/kb/file/:id', authMiddleware, UserKnowledgeController.deleteFile);
-app.post('/kb/search', authMiddleware, UserKnowledgeController.search);
-
-// Legacy routes (backward compatibility)
-app.post('/knowledge/upload', authMiddleware, upload.single('file'), UserKnowledgeController.uploadFile);
-app.get('/knowledge/files', authMiddleware, UserKnowledgeController.getFiles);
-app.get('/knowledge/files/:id/status', authMiddleware, UserKnowledgeController.getFileStatus);
-app.delete('/knowledge/files/:id', authMiddleware, UserKnowledgeController.deleteFile);
-app.post('/knowledge/search', authMiddleware, UserKnowledgeController.search);
-
-// Knowledge Base Config Routes (MCP 接入配置)
-import { KnowledgeConfigController } from './controllers/KnowledgeConfigController';
-
-app.get('/kb/config', authMiddleware, KnowledgeConfigController.getConfig);
-app.post('/kb/toggle', authMiddleware, KnowledgeConfigController.toggleEnabled);
-app.post('/kb/verify-token', KnowledgeConfigController.verifyToken); // 无需 auth，使用 MCP Token 验证
+// Knowledge base feature is intentionally removed from open-source edition.
 
 app.get('/', (req, res) => {
-    res.send('Xiaozhi MCP Manager Backend');
+    res.send('小智 ESP32的 MCP 平台 Backend');
 });
 
 import { UserMCPInstance } from './entities/UserMCPInstance';

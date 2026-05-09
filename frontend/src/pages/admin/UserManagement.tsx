@@ -40,7 +40,7 @@ export default function UserManagement() {
             await axios.put(`/api/admin/users/${id}`, { expireDate: editExpire });
             setEditId(null);
             fetchUsers();
-        } catch (error) {
+        } catch {
             alert("Failed to update user");
         }
     };

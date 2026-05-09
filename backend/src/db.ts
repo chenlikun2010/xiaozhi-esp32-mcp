@@ -11,11 +11,11 @@ import { ActivationCode } from './entities/ActivationCode';
 
 export const AppDataSource = new DataSource({
     type: "mysql",
-    host: process.env.DB_HOST || "8.140.51.220",
+    host: process.env.DB_HOST || "localhost",
     port: parseInt(process.env.DB_PORT || "3306"),
-    username: process.env.DB_USER || "mcpadmin",
-    password: process.env.DB_PASSWORD || "Mcp@20260109",
-    database: process.env.DB_NAME || "mcplist",
+    username: process.env.DB_USER || "root",
+    password: process.env.DB_PASSWORD || process.env.DB_PASS || "",
+    database: process.env.DB_NAME || "mcpdb",
     synchronize: true, // Auto-schema sync for dev
     logging: false,
     entities: [MCPService, UserMCPInstance, User, VerificationCode, ActivationCode],

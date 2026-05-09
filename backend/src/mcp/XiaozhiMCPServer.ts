@@ -13,7 +13,6 @@ import { SearchTrainTicketsDefinition, handleSearchTrainTickets } from "./tools/
 import { GetGoldPriceDefinition, handleGetGoldPrice } from "./tools/GoldPriceTool";
 import { SearchReportsDefinition, handleSearchReports } from "./tools/ReportSearchTool";
 import { ReportExpertDefinition, handleReportExpert } from "./tools/ReportExpertTool";
-import { PrivateDocsSearchDefinition, handlePrivateDocsSearch } from "./tools/PrivateDocsSearchTool";
 import { GetExpressInfoDefinition, handleGetExpressInfo } from "./tools/Kuaidi100Tool";
 
 export class XiaozhiMCPServer {
@@ -94,8 +93,6 @@ export class XiaozhiMCPServer {
             this.registerGoldTools();
         } else if (this.serviceName.includes("报告") || this.serviceName.includes("Report")) {
             this.registerReportTool();
-        } else if (this.serviceName.includes("知识库") || this.serviceName.includes("Knowledge")) {
-            this.registerPrivateDocsTool();
         } else if (this.serviceName.includes("快递") || this.serviceName.includes("Express")) {
             this.registerExpressTools();
         } else if (this.serviceName.includes("航班") || this.serviceName.includes("Flight") || this.serviceName.includes("Variflight")) {
@@ -319,26 +316,6 @@ export class XiaozhiMCPServer {
             ReportExpertDefinition.name,
             ReportExpertDefinition.schema,
             async (args) => this.wrapHandler(handleReportExpert, args, ReportExpertDefinition.name)
-        );
-    }
-
-    private registerPrivateDocsTool() {
-        this.server.tool(
-            PrivateDocsSearchDefinition.name,
-            PrivateDocsSearchDefinition.schema,
-            async (args) => {
-                if (!this.userId) {
-                    return {
-                        content: [{ type: "text", text: "无法识别用户身份，请确保您已登录。" }],
-                        isError: true
-                    };
-                }
-                return this.wrapHandler(
-                    (a) => handlePrivateDocsSearch(a, this.userId!),
-                    args,
-                    PrivateDocsSearchDefinition.name
-                );
-            }
         );
     }
 

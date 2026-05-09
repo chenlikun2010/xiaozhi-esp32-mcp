@@ -23,9 +23,6 @@ export class User {
     @Column({ name: 'expire_date', type: 'datetime' })
     expireDate!: Date;
 
-    @Column({ name: 'knowledge_enabled', default: false })
-    knowledgeEnabled!: boolean;
-
     @CreateDateColumn()
     createdAt!: Date;
 

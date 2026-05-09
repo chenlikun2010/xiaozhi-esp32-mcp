@@ -7,7 +7,10 @@ export class ServiceController {
         try {
             const repo = AppDataSource.getRepository(MCPService);
             const services = await repo.find();
-            return res.json(services);
+            const visibleServices = services.filter(
+                (svc) => !/(知识库|knowledge|rag)/i.test(`${svc.name} ${svc.description || ''}`)
+            );
+            return res.json(visibleServices);
         } catch (error: any) {
             return res.status(500).json({ message: error.message });
         }

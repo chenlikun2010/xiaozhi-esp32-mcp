@@ -13,7 +13,7 @@ interface Service {
 const SERVICE_ICONS: Record<string, string> = {
   '联网搜索': '🔍', '菜谱查询': '🍳', 'MBTI': '🧠', '股票': '📈',
   '汇率': '💱', '火车票': '🚄', '黄金': '🥇', '行业报告': '📊',
-  '知识库': '📚', '快递': '📦', '航班': '✈️', '新闻': '📰',
+  '快递': '📦', '航班': '✈️', '新闻': '📰',
 };
 
 function getIcon(name: string) {
@@ -30,6 +30,9 @@ export default function Marketplace() {
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const visibleServices = services.filter(
+    svc => !/(知识库|knowledge|rag)/i.test(`${svc.name} ${svc.description || ''}`)
+  );
 
   useEffect(() => {
     axios.get('/api/services').then(res => setServices(res.data)).catch(console.error);
@@ -42,8 +45,12 @@ export default function Marketplace() {
     try {
       await axios.post('/api/instances', { serviceId: selectedService.id, xiaozhiWssUrl: wssUrl });
       navigate('/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.message || '添加实例失败，请检查输入');
+    } catch (err: unknown) {
+      if (axios.isAxiosError<{ message?: string }>(err)) {
+        setError(err.response?.data?.message || err.message || '添加实例失败，请检查输入');
+      } else {
+        setError('添加实例失败，请检查输入');
+      }
     } finally {
       setAdding(false);
     }
@@ -60,7 +67,7 @@ export default function Marketplace() {
       {!selectedService ? (
         /* Service list */
         <div className="app-grid-3">
-          {services.map(svc => (
+          {visibleServices.map(svc => (
             <div
               key={svc.id}
               className="svc-card"

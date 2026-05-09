@@ -43,9 +43,13 @@ export default function CodeManagement() {
             await axios.post('/api/admin/codes/generate', { count: genCount, durationDays: genDays });
             fetchCodes();
             alert("生成成功");
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error(error);
-            alert("生成失败: " + (error.response?.data?.message || error.message));
+            if (axios.isAxiosError<{ message?: string }>(error)) {
+                alert("生成失败: " + (error.response?.data?.message || error.message));
+            } else {
+                alert("生成失败");
+            }
         } finally {
             setGenerating(false);
         }

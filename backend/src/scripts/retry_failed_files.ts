@@ -1,4 +1,3 @@
-
 import 'dotenv/config';
 import { Pool } from 'pg';
 import path from 'path';
@@ -18,22 +17,8 @@ const config = {
 
 const pool = new Pool(config);
 
-async function retryFailed() {
-    const client = await pool.connect();
-    try {
-        await client.query(`SET search_path TO ${config.schema}, public`);
-        const result = await client.query(`
-            UPDATE user_knowledge_files 
-            SET status = 'pending', error_message = NULL, updated_at = CURRENT_TIMESTAMP 
-            WHERE status = 'failed'
-        `);
-        console.log(`Reset ${result.rowCount} failed files to pending.`);
-    } catch (error) {
-        console.error('Error resetting files:', error);
-    } finally {
-        client.release();
-        pool.end();
-    }
-}
+/**
+ * 已下线：知识库功能已从开源版移除。
+ */
 
-retryFailed();
+console.log('知识库功能已从开源版移除，不再支持 retry_failed_files 脚本。');

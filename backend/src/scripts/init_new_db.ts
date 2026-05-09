@@ -45,9 +45,6 @@ async function init() {
         // Run report initialization
         await runSqlFile('init_report_db.sql');
 
-        // Run user knowledge initialization
-        await runSqlFile('init_user_knowledge_db.sql');
-
         console.log("Database initialization completed successfully.");
     } catch (error) {
         console.error("Initialization failed.");

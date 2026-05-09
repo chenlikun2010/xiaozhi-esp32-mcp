@@ -8,7 +8,6 @@ import Dashboard from './pages/Dashboard';
 import Settings from './pages/Settings';
 import ForgotPassword from './pages/ForgotPassword';
 import Marketplace from './pages/Marketplace';
-import KnowledgeBase from './pages/KnowledgeBase';
 import InviteList from './pages/InviteList';
 import { AdminLayout } from './layouts/AdminLayout';
 import UserManagement from './pages/admin/UserManagement';
@@ -58,7 +57,6 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/marketplace" element={<Marketplace />} />
         <Route path="/settings" element={<Settings />} />
-        <Route path="/knowledge" element={<KnowledgeBase />} />
         <Route path="/invite-list" element={<InviteList />} />
 
         {/* Admin Routes */}

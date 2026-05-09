@@ -1,4 +1,3 @@
-
 import 'dotenv/config';
 import { Pool } from 'pg';
 import path from 'path';
@@ -19,39 +18,8 @@ const config = {
 
 const pool = new Pool(config);
 
-async function debugFile() {
-    const client = await pool.connect();
-    try {
-        await client.query(`SET search_path TO ${config.schema}, public`);
-        const res = await client.query('SELECT user_id, file_name FROM user_knowledge_files WHERE id = 65');
+/**
+ * 已下线：知识库相关调试脚本已移除。
+ */
 
-        if (res.rows.length === 0) {
-            console.log('File 65 not found in DB');
-            return;
-        }
-
-        const { user_id, file_name } = res.rows[0];
-        console.log(`DB Info: ID=65, User=${user_id}, Name=${file_name}`);
-
-        const userDir = path.join(config.uploadDir!, String(user_id));
-        console.log(`Checking dir: ${userDir}`);
-
-        if (fs.existsSync(userDir)) {
-            const files = fs.readdirSync(userDir);
-            console.log('Files on disk:', files);
-
-            const matched = files.find(f => f.endsWith(file_name));
-            console.log('Match found:', matched);
-        } else {
-            console.log('User directory does not exist!');
-        }
-
-    } catch (error) {
-        console.error(error);
-    } finally {
-        client.release();
-        pool.end();
-    }
-}
-
-debugFile();
+console.log('debug_file_path 已下线。');

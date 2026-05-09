@@ -203,10 +203,6 @@ const NAV_ITEMS = [
     icon: <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 3h12l-1 6H3L2 3z"/><circle cx="6" cy="13" r="1"/><circle cx="11" cy="13" r="1"/></svg>,
   },
   {
-    label: '知识库', path: '/knowledge',
-    icon: <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 2h8l2 2v10H3V2z"/><path d="M5 6h6M5 9h4"/></svg>,
-  },
-  {
     label: '设置', path: '/settings',
     icon: <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="2.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.1 3.1l1.4 1.4M11.5 11.5l1.4 1.4M3.1 12.9l1.4-1.4M11.5 4.5l1.4-1.4"/></svg>,
   },
@@ -231,7 +227,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Mobile header */}
       <header className="app-mobile-header">
-        <span className="app-mobile-logo">小智 MCP</span>
+        <span className="app-mobile-logo">小智 ESP32的 MCP 平台</span>
         <button className="app-hamburger" onClick={() => setSidebarOpen(v => !v)}>
           {sidebarOpen
             ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -254,7 +250,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <line x1="26" y1="16" x2="30" y2="16" stroke="rgba(0,200,255,0.6)" strokeWidth="1.5"/>
             </svg>
             <div>
-              <div className="app-sidebar-logo-text">小智 MCP</div>
+              <div className="app-sidebar-logo-text">小智 ESP32的 MCP 平台</div>
               <div className="app-sidebar-logo-sub">ESP32 · Open Source</div>
             </div>
           </Link>

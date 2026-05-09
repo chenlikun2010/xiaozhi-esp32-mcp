@@ -22,8 +22,12 @@ export default function Settings() {
       setMessage('密码修改成功');
       setOldPassword('');
       setNewPassword('');
-    } catch (err: any) {
-      setError(err.response?.data?.message || '修改失败');
+    } catch (err: unknown) {
+      if (axios.isAxiosError<{ message?: string }>(err)) {
+        setError(err.response?.data?.message || err.message || '修改失败');
+      } else {
+        setError('修改失败');
+      }
     } finally {
       setLoading(false);
     }

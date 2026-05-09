@@ -871,19 +871,26 @@ export default function LandingPage() {
           <div>
             <div className="lp-footer-col-title">平台</div>
             <ul className="lp-footer-links">
-              {['服务市场', '开发文档', 'API 参考', '更新日志'].map(t => <li key={t}><a href="#">{t}</a></li>)}
+              <li><a href="#services">服务市场</a></li>
+              <li><a href="https://github.com/chenlikun2010/xiaozhi-esp32-mcp/blob/main/docs/DEVELOPMENT.md" target="_blank" rel="noreferrer">开发文档</a></li>
+              <li><a href="https://github.com/chenlikun2010/xiaozhi-esp32-mcp/blob/main/docs/API_REFERENCE.md" target="_blank" rel="noreferrer">API 参考</a></li>
+              <li><a href="https://github.com/chenlikun2010/xiaozhi-esp32-mcp/blob/main/CHANGELOG.md" target="_blank" rel="noreferrer">更新日志</a></li>
             </ul>
           </div>
           <div>
             <div className="lp-footer-col-title">社区</div>
             <ul className="lp-footer-links">
-              {['GitHub', '论坛', 'Discord', '贡献指南'].map(t => <li key={t}><a href="#">{t}</a></li>)}
+              <li><a href="https://github.com/chenlikun2010/xiaozhi-esp32-mcp" target="_blank" rel="noreferrer">GitHub</a></li>
+              <li><a href="https://github.com/chenlikun2010/xiaozhi-esp32-mcp/blob/main/docs/CONTRIBUTING.md" target="_blank" rel="noreferrer">贡献指南</a></li>
             </ul>
           </div>
           <div>
             <div className="lp-footer-col-title">关于</div>
             <ul className="lp-footer-links">
-              {['项目介绍', '开源协议', '联系我们', '隐私政策'].map(t => <li key={t}><a href="#">{t}</a></li>)}
+              <li><a href="https://github.com/chenlikun2010/xiaozhi-esp32-mcp/blob/main/docs/PROJECT_INTRODUCTION.md" target="_blank" rel="noreferrer">项目介绍</a></li>
+              <li><a href="https://github.com/chenlikun2010/xiaozhi-esp32-mcp/blob/main/LICENSE" target="_blank" rel="noreferrer">开源协议</a></li>
+              <li><a href="https://facaiai.cn" target="_blank" rel="noreferrer">联系我们</a></li>
+              <li><a href="https://github.com/chenlikun2010/xiaozhi-esp32-mcp/blob/main/docs/PRIVACY.md" target="_blank" rel="noreferrer">隐私政策</a></li>
             </ul>
           </div>
         </div>

@@ -66,6 +66,16 @@ const seed = async () => {
             name: "番茄小说全能助手",
             description: "提供番茄小说检索、目录与章节内容能力。",
             imageUrl: "/vite.svg"
+        },
+        {
+            name: "八字计算器",
+            description: "提供专业八字排盘数据，可用于传统文化视角下的五行、性格与运势分析。",
+            imageUrl: "/vite.svg"
+        },
+        {
+            name: "中国姓名生成分析工具",
+            description: "基于传统音律、字义典故与现代审美的智能起名工具，支持姓名生成、含义分析、重名查询与多维度解析。",
+            imageUrl: "/vite.svg"
         }
     ];
 

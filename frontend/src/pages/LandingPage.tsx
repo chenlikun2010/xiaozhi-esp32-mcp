@@ -265,6 +265,8 @@ const SERVICES = [
   { id: 'express', icon: '📦', name: '快递查询助手', desc: '支持顺丰、圆通、中通、申通、韵达等全网快递物流轨迹实时查询。', tag: '生活', badge: 'free' },
   { id: 'flight', icon: '✈️', name: '飞常准航班服务', desc: '全面的航班信息查询，支持按航班号、起降地查询航班状态、时刻表，以及机场天气查询。', tag: '出行', badge: 'free' },
   { id: 'news', icon: '📰', name: '新闻查询服务', desc: '获取 The Verge 等媒体的最新科技新闻，支持今日新闻、周报摘要与关键词搜索。', tag: 'AI', badge: 'free' },
+  { id: 'bazi', icon: '☯️', name: '八字计算器', desc: '提供专业八字排盘数据，可用于传统文化视角下的五行、性格与运势分析。', tag: '生活', badge: 'new' },
+  { id: 'naming', icon: '🪪', name: '中国姓名生成分析工具', desc: '基于传统音律、字义典故与现代审美的智能起名工具，支持姓名生成、含义分析、重名查询与多维度解析。', tag: '生活', badge: 'new' },
 ];
 
 const FEATURES = [

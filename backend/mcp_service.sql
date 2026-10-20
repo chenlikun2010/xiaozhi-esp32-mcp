@@ -136,7 +136,9 @@ INSERT INTO `mcp_service` (`id`, `name`, `description`, `image_url`, `status`, `
 (9,  '快递查询助手',   '支持主流快递单号物流轨迹查询。',                         '/vite.svg',         'stopped', NULL, NULL),
 (10, '飞常准航班服务', '提供航班动态、时刻与相关信息查询。',                     '/vite.svg',         'stopped', NULL, NULL),
 (11, '新闻查询服务',   '聚合科技新闻与资讯，支持关键词检索。',                   '/vite.svg',         'stopped', NULL, NULL),
-(12, '番茄小说全能助手','提供番茄小说检索、目录与章节内容能力。',                 '/vite.svg',         'stopped', NULL, NULL)
+(12, '番茄小说全能助手','提供番茄小说检索、目录与章节内容能力。',                 '/vite.svg',         'stopped', NULL, NULL),
+(13, '八字计算器',     '提供专业八字排盘数据，可用于传统文化视角下的五行、性格与运势分析。', '/vite.svg', 'stopped', NULL, NULL),
+(14, '中国姓名生成分析工具', '基于传统音律、字义典故与现代审美的智能起名工具，支持姓名生成、含义分析、重名查询与多维度解析。', '/vite.svg', 'stopped', NULL, NULL)
 ON DUPLICATE KEY UPDATE
   `name` = VALUES(`name`),
   `description` = VALUES(`description`),

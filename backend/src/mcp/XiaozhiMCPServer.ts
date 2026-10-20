@@ -101,9 +101,31 @@ export class XiaozhiMCPServer {
             await this.registerVergeNewsTools();
         } else if (this.serviceName.includes("小说") || this.serviceName.includes("Novel") || this.serviceName.includes("Fanqie")) {
             await this.registerFanqieTools();
+        } else if (this.serviceName.includes("八字") || this.serviceName.includes("Bazi")) {
+            await this.registerBaziTools();
+        } else if (this.serviceName.includes("姓名") || this.serviceName.includes("起名")) {
+            await this.registerNamingTools();
         } else {
             console.warn(`Unknown service name: ${this.serviceName}. Only base tools registered.`);
         }
+    }
+
+    private async registerNamingTools() {
+        console.log("[XiaozhiMCPServer] Registering Chinese naming tools...");
+        const command = "node";
+        const args = ["node_modules/.bin/chinese-naming-mcp"];
+        const env = { ...process.env } as Record<string, string>;
+
+        await this.registerStdioTools(command, args, env);
+    }
+
+    private async registerBaziTools() {
+        console.log("[XiaozhiMCPServer] Registering Bazi tools...");
+        const command = "node";
+        const args = ["node_modules/.bin/bazi-mcp"];
+        const env = { ...process.env } as Record<string, string>;
+
+        await this.registerStdioTools(command, args, env);
     }
 
     private async registerFanqieTools() {
